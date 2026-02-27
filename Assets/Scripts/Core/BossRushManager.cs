@@ -2,12 +2,10 @@ using UnityEngine;
 using System;
 
 /// <summary>
-/// Gestor del modo Boss Rush
-/// Responsabilidades:
-/// - Iniciar y terminar runs
-/// - Seleccionar enemigos aleatorios
-/// - Gestionar el flujo entre combates
-/// - Llevar estadisticas de la run
+/// Gestor del modo Boss Rush con sistema de progresion
+/// - 20 enemigos máximo por run
+/// - Progresión de tiers: más tier 3 mientras más avanzas
+/// - Enemigo 20 es un boss con stats x3
 /// </summary>
 public class BossRushManager : MonoBehaviour
 {
@@ -19,6 +17,10 @@ public class BossRushManager : MonoBehaviour
     [Header("Boss Rush Settings")]
     public CombatMode defaultMode = CombatMode.PlayerChooses;
     
+    [Header("Progression Settings")]
+    public int maxEnemiesPerRun = 20;
+    public float bossStatsMultiplier = 3f;
+    
     [Header("Run Statistics")]
     private int enemiesDefeatedThisRun = 0;
     private int totalTurnsUsed = 0;
@@ -27,10 +29,10 @@ public class BossRushManager : MonoBehaviour
     // Eventos
     public event Action<CombatMode> OnRunStarted;
     public event Action<int, int> OnRunEnded; // (finalScore, enemiesDefeated)
+    public event Action<int, int> OnProgressionUpdate; // (current, max) para UI
 
     void Start()
     {
-        // Suscribirse a eventos del CombatManager
         if (combatManager != null)
         {
             combatManager.OnCombatEnd += HandleCombatEnd;
@@ -47,9 +49,6 @@ public class BossRushManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Inicia una nueva Boss Rush run
-    /// </summary>
     public void StartNewRun(CombatMode mode)
     {
         Debug.Log("BossRushManager: Iniciando nueva run en modo " + mode);
@@ -57,11 +56,9 @@ public class BossRushManager : MonoBehaviour
         runInProgress = true;
         defaultMode = mode;
         
-        // Resetear estadisticas
         enemiesDefeatedThisRun = 0;
         totalTurnsUsed = 0;
         
-        // Inicializar jugador
         if (playerManager != null)
         {
             playerManager.InitializeForNewRun(5);
@@ -71,16 +68,12 @@ public class BossRushManager : MonoBehaviour
             Debug.LogError("PlayerManager no asignado en BossRushManager");
         }
         
-        // Notificar inicio
         OnRunStarted?.Invoke(mode);
+        OnProgressionUpdate?.Invoke(0, maxEnemiesPerRun);
         
-        // Iniciar primer combate
         StartNextCombat();
     }
 
-    /// <summary>
-    /// Inicia el siguiente combate con un enemigo aleatorio
-    /// </summary>
     public void StartNextCombat()
     {
         if (!runInProgress)
@@ -95,19 +88,41 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
-        // Obtener enemigo aleatorio
-        var (randomEnemy, randomTier) = enemyDatabase.GetRandomEnemy();
+        // Verificar si es el enemigo final (boss)
+        bool isFinalBoss = (enemiesDefeatedThisRun + 1) >= maxEnemiesPerRun;
+        
+        EnemyData enemyData;
+        EnemyTier tier;
 
-        if (randomEnemy == null)
+        if (isFinalBoss)
         {
-            Debug.LogError("No se pudo obtener enemigo aleatorio");
+            // Boss final: Tier 3 garantizado
+            (enemyData, tier) = GetRandomEnemyWithTier(EnemyTier.Tier_3);
+            Debug.Log("BOSS FINAL! Enemigo " + maxEnemiesPerRun + " de " + maxEnemiesPerRun);
+        }
+        else
+        {
+            // Enemigo normal con progresión
+            tier = GetTierBasedOnProgression();
+            (enemyData, tier) = GetRandomEnemyWithTier(tier);
+            Debug.Log("Enemigo " + (enemiesDefeatedThisRun + 1) + " de " + maxEnemiesPerRun + " (Tier: " + tier + ")");
+        }
+
+        if (enemyData == null)
+        {
+            Debug.LogError("No se pudo obtener enemigo");
             return;
         }
 
-        // Iniciar combate en CombatManager
+        // Si es el boss final, modificar stats
+        if (isFinalBoss)
+        {
+            ApplyBossMultiplier(enemyData, tier);
+        }
+
         if (combatManager != null)
         {
-            combatManager.StartCombat(randomEnemy, randomTier, defaultMode);
+            combatManager.StartCombat(enemyData, tier, defaultMode);
         }
         else
         {
@@ -116,8 +131,120 @@ public class BossRushManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Maneja el evento de fin de combate
+    /// Determina el tier según la progresión en la run
     /// </summary>
+    EnemyTier GetTierBasedOnProgression()
+    {
+        int currentEnemy = enemiesDefeatedThisRun + 1;
+        float progress = (float)currentEnemy / maxEnemiesPerRun;
+
+        // Definir probabilidades según progresión
+        float tier1Chance, tier2Chance, tier3Chance;
+
+        if (progress <= 0.25f) // Rondas 1-5
+        {
+            tier1Chance = 0.70f;
+            tier2Chance = 0.25f;
+            tier3Chance = 0.05f;
+        }
+        else if (progress <= 0.50f) // Rondas 6-10
+        {
+            tier1Chance = 0.40f;
+            tier2Chance = 0.40f;
+            tier3Chance = 0.20f;
+        }
+        else if (progress <= 0.75f) // Rondas 11-15
+        {
+            tier1Chance = 0.20f;
+            tier2Chance = 0.40f;
+            tier3Chance = 0.40f;
+        }
+        else // Rondas 16-19
+        {
+            tier1Chance = 0.10f;
+            tier2Chance = 0.30f;
+            tier3Chance = 0.60f;
+        }
+
+        // Generar tier basado en probabilidades
+        float roll = UnityEngine.Random.Range(0f, 1f);
+
+        if (roll < tier1Chance)
+            return EnemyTier.Tier_1;
+        else if (roll < tier1Chance + tier2Chance)
+            return EnemyTier.Tier_2;
+        else
+            return EnemyTier.Tier_3;
+    }
+
+    /// <summary>
+    /// Obtiene un enemigo aleatorio con un tier específico
+    /// </summary>
+    (EnemyData, EnemyTier) GetRandomEnemyWithTier(EnemyTier desiredTier)
+    {
+        // Obtener enemigo aleatorio
+        EnemyData randomEnemy = enemyDatabase.allEnemies[UnityEngine.Random.Range(0, enemyDatabase.allEnemies.Count)];
+
+        // Verificar si tiene el tier deseado
+        bool hasTier = false;
+        foreach (var tierData in randomEnemy.enemyTierData)
+        {
+            if (tierData.enemyTier == desiredTier)
+            {
+                hasTier = true;
+                break;
+            }
+        }
+
+        // Si no tiene el tier deseado, buscar otro enemigo (máximo 10 intentos)
+        int attempts = 0;
+        while (!hasTier && attempts < 10)
+        {
+            randomEnemy = enemyDatabase.allEnemies[UnityEngine.Random.Range(0, enemyDatabase.allEnemies.Count)];
+            
+            foreach (var tierData in randomEnemy.enemyTierData)
+            {
+                if (tierData.enemyTier == desiredTier)
+                {
+                    hasTier = true;
+                    break;
+                }
+            }
+            
+            attempts++;
+        }
+
+        // Si después de 10 intentos no encontró, usar cualquier tier disponible
+        if (!hasTier && randomEnemy.enemyTierData.Length > 0)
+        {
+            Debug.LogWarning("No se encontró enemigo con tier " + desiredTier + ", usando tier disponible");
+            desiredTier = randomEnemy.enemyTierData[0].enemyTier;
+        }
+
+        return (randomEnemy, desiredTier);
+    }
+
+    /// <summary>
+    /// Aplica multiplicador de stats al boss final
+    /// </summary>
+    void ApplyBossMultiplier(EnemyData enemyData, EnemyTier tier)
+    {
+        // Buscar el tier data correspondiente
+        foreach (var tierData in enemyData.enemyTierData)
+        {
+            if (tierData.enemyTier == tier)
+            {
+                // Multiplicar stats
+                tierData.healthThreshold = Mathf.RoundToInt(tierData.healthThreshold * bossStatsMultiplier);
+                tierData.diceCount = Mathf.RoundToInt(tierData.diceCount * bossStatsMultiplier);
+                tierData.failureDamage = Mathf.RoundToInt(tierData.failureDamage * bossStatsMultiplier);
+                
+                Debug.Log("Boss stats multiplicados x" + bossStatsMultiplier);
+                break;
+            }
+        }
+    }
+
     void HandleCombatEnd(bool victory, int currentScore, AffinityType rewardCard, int lifeLost)
     {
         if (!runInProgress) return;
@@ -127,19 +254,20 @@ public class BossRushManager : MonoBehaviour
             enemiesDefeatedThisRun++;
             Debug.Log("Enemigos derrotados en esta run: " + enemiesDefeatedThisRun);
             
-            // El flujo continuará desde la UI (puede haber maldiciones, etc.)
-            // La UI llamará a ContinueToNextCombat() cuando esté lista
-        }
-        else
-        {
-            // Derrota pero el jugador sigue vivo
-            // El flujo continuará desde la UI
+            // Notificar progresión
+            OnProgressionUpdate?.Invoke(enemiesDefeatedThisRun, maxEnemiesPerRun);
+            
+            // Verificar si completó la run (derrotó al boss final)
+            if (enemiesDefeatedThisRun >= maxEnemiesPerRun)
+            {
+                Debug.Log("RUN COMPLETADA! Derrotaste al boss final!");
+                EndRun(currentScore);
+                
+                // Aquí podrías mostrar una pantalla de victoria especial
+            }
         }
     }
 
-    /// <summary>
-    /// Continua al siguiente combate (llamado desde UI después de eventos post-combate)
-    /// </summary>
     public void ContinueToNextCombat()
     {
         if (!runInProgress)
@@ -158,18 +286,18 @@ public class BossRushManager : MonoBehaviour
         StartNextCombat();
     }
 
-    /// <summary>
-    /// Maneja el evento de Game Over
-    /// </summary>
     void HandleGameOver(int finalScore, int fuerzaCards, int agilidadCards, int destrezaCards, EnemyInstance defeatedBy)
     {
         Debug.Log("BossRushManager: Game Over - Score: " + finalScore);
         EndRun(finalScore);
+        
+        // Limpiar guardado
+        if (RunSaveManager.Instance != null)
+        {
+            RunSaveManager.Instance.ClearSavedRun();
+        }
     }
 
-    /// <summary>
-    /// Termina la run actual
-    /// </summary>
     public void EndRun(int finalScore)
     {
         if (!runInProgress)
@@ -184,13 +312,15 @@ public class BossRushManager : MonoBehaviour
         
         runInProgress = false;
         
-        // Notificar fin de run
         OnRunEnded?.Invoke(finalScore, enemiesDefeatedThisRun);
+        
+        // Limpiar guardado
+        if (RunSaveManager.Instance != null)
+        {
+            RunSaveManager.Instance.ClearSavedRun();
+        }
     }
 
-    /// <summary>
-    /// Fuerza el fin de la run (para debugging o quit)
-    /// </summary>
     public void ForceEndRun()
     {
         if (runInProgress)
@@ -200,8 +330,32 @@ public class BossRushManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Restaura el estado de una run guardada
+    /// </summary>
+    public void RestoreRunState(CombatMode mode, int enemiesDefeated)
+    {
+        Debug.Log("BossRushManager: Restaurando run - Modo: " + mode + ", Enemigos derrotados: " + enemiesDefeated);
+        
+        runInProgress = true;
+        defaultMode = mode;
+        enemiesDefeatedThisRun = enemiesDefeated;
+        
+        OnRunStarted?.Invoke(mode);
+        OnProgressionUpdate?.Invoke(enemiesDefeatedThisRun, maxEnemiesPerRun);
+    }
+
+    public void ClearCurrentRun()
+    {
+        runInProgress = false;
+        enemiesDefeatedThisRun = 0;
+        totalTurnsUsed = 0;
+    }
+
     // GETTERS
     public bool IsRunInProgress() => runInProgress;
     public int GetEnemiesDefeatedThisRun() => enemiesDefeatedThisRun;
     public CombatMode GetCurrentMode() => defaultMode;
+    public int GetMaxEnemies() => maxEnemiesPerRun;
+    public float GetRunProgress() => (float)enemiesDefeatedThisRun / maxEnemiesPerRun;
 }

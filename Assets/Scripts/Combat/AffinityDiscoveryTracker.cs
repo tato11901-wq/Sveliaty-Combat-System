@@ -1,22 +1,43 @@
 using System.Collections.Generic;
 
-public static class AffinityDiscoveryTracker 
+/// <summary>
+/// Sistema estatico para trackear que afinidades ha probado el jugador contra cada enemigo
+/// Ahora tambien registra en el BestiaryManager para persistencia
+/// </summary>
+public static class AffinityDiscoveryTracker
 {
-    // Diccionario: ID del Enemigo -> Lista de Afinidades ya probadas
-    private static Dictionary<int, HashSet<AffinityType>> discoveredAffinities = new Dictionary<int, HashSet<AffinityType>>();
+    // Diccionario: EnemyID -> HashSet de afinidades descubiertas
+    private static Dictionary<int, HashSet<AffinityType>> discoveries = new Dictionary<int, HashSet<AffinityType>>();
 
-    public static void RegisterDiscovery(int enemyId, AffinityType type)
+    /// <summary>
+    /// Registra que el jugador uso una afinidad contra un enemigo
+    /// </summary>
+    public static void RegisterDiscovery(int enemyId, AffinityType affinity)
     {
-        if (!discoveredAffinities.ContainsKey(enemyId))
-            discoveredAffinities[enemyId] = new HashSet<AffinityType>();
-        
-        discoveredAffinities[enemyId].Add(type);
+        if (!discoveries.ContainsKey(enemyId))
+        {
+            discoveries[enemyId] = new HashSet<AffinityType>();
+        }
+
+        // Añadir al tracking en memoria
+        bool wasNew = discoveries[enemyId].Add(affinity);
+
+        // NUEVO: Registrar en BestiaryManager para persistencia
+        if (wasNew && BestiaryManager.Instance != null)
+        {
+            BestiaryManager.Instance.RegisterAffinityDiscovered(enemyId, affinity);
+        }
     }
 
-    public static bool IsDiscovered(int enemyId, AffinityType type)
+    /// <summary>
+    /// Verifica si una afinidad fue descubierta contra un enemigo
+    /// </summary>
+    public static bool IsDiscovered(int enemyId, AffinityType affinity)
     {
-        if (discoveredAffinities.TryGetValue(enemyId, out var types))
-            return types.Contains(type);
-        return false;
+        if (!discoveries.ContainsKey(enemyId))
+            return false;
+
+        return discoveries[enemyId].Contains(affinity);
     }
+
 }

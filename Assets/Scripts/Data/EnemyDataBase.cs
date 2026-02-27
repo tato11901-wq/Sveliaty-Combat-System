@@ -1,84 +1,57 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[CreateAssetMenu(menuName = "Sveliaty/Data Base/Enemy Database")]
+[CreateAssetMenu(menuName = "Sveliaty/Enemy Database")]
 public class EnemyDatabase : ScriptableObject
 {
-    [Header("Configuración")]
-    [Tooltip("Lista de todos los enemigos disponibles")]
     public List<EnemyData> allEnemies = new List<EnemyData>();
 
-    [Header("Probabilidades de Tier")]
-    [Range(0, 100)]
-    [Tooltip("Probabilidad de Tier 1")]
-    public float tier1Probability = 60f;
-
-    [Range(0, 100)]
-    [Tooltip("Probabilidad de Tier 2")]
-    public float tier2Probability = 30f;
-
-    [Range(0, 100)]
-    [Tooltip("Probabilidad de Tier 3")]
-    public float tier3Probability = 10f;
-
     /// <summary>
-    /// Obtiene un enemigo aleatorio con un tier aleatorio basado en probabilidades
+    /// Obtiene un enemigo aleatorio con un tier aleatorio
     /// </summary>
     public (EnemyData enemy, EnemyTier tier) GetRandomEnemy()
     {
         if (allEnemies == null || allEnemies.Count == 0)
         {
-            Debug.LogError("❌ No hay enemigos en la base de datos");
+            Debug.LogError("EnemyDatabase esta vacio");
             return (null, EnemyTier.Tier_1);
         }
 
         // Seleccionar enemigo aleatorio
         EnemyData randomEnemy = allEnemies[Random.Range(0, allEnemies.Count)];
 
-        // Seleccionar tier basado en probabilidades
-        EnemyTier randomTier = GetRandomTier();
-
-        return (randomEnemy, randomTier);
-    }
-
-    /// <summary>
-    /// Selecciona un tier aleatorio basado en probabilidades
-    /// </summary>
-    EnemyTier GetRandomTier()
-    {
-        float total = tier1Probability + tier2Probability + tier3Probability;
-        float randomValue = Random.Range(0f, total);
-
-        if (randomValue < tier1Probability)
+        // Seleccionar tier aleatorio de los disponibles
+        if (randomEnemy.enemyTierData == null || randomEnemy.enemyTierData.Length == 0)
         {
-            return EnemyTier.Tier_1;
+            Debug.LogError("Enemigo " + randomEnemy.displayName + " no tiene tiers configurados");
+            return (randomEnemy, EnemyTier.Tier_1);
         }
-        else if (randomValue < tier1Probability + tier2Probability)
-        {
-            return EnemyTier.Tier_2;
-        }
-        else
-        {
-            return EnemyTier.Tier_3;
-        }
-    }
 
-    /// <summary>
-    /// Validación en el Inspector
-    /// </summary>
-    void OnValidate()
-    {
-        float total = tier1Probability + tier2Probability + tier3Probability;
+        EnemyTierData randomTierData = randomEnemy.enemyTierData[Random.Range(0, randomEnemy.enemyTierData.Length)];
         
-        if (Mathf.Abs(total - 100f) > 0.01f)
+        return (randomEnemy, randomTierData.enemyTier);
+    }
+
+    /// <summary>
+    /// Busca un enemigo por ID
+    /// </summary>
+    public EnemyData GetEnemyById(int id)
+    {
+        foreach (var enemy in allEnemies)
         {
-            Debug.LogWarning($"⚠️ EnemyDatabase: Las probabilidades suman {total:F1}% (deberían sumar 100%)");
+            if (enemy.id == id)
+                return enemy;
         }
 
-        // Advertir si la lista está vacía
-        if (allEnemies == null || allEnemies.Count == 0)
-        {
-            Debug.LogWarning("⚠️ EnemyDatabase: No hay enemigos en la lista");
-        }
+        Debug.LogWarning("Enemigo con ID " + id + " no encontrado");
+        return null;
+    }
+
+    /// <summary>
+    /// Obtiene todos los enemigos
+    /// </summary>
+    public List<EnemyData> GetAllEnemies()
+    {
+        return allEnemies;
     }
 }

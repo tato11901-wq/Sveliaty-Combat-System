@@ -116,8 +116,6 @@ public class CombatManager : MonoBehaviour
 
     float GetAffinityMultiplier(AffinityType attackType)
     {
-        if (currentCombatMode == CombatMode.Passive)
-            return 1f;
 
         if (currentEnemy.enemyData.affinityRelations == null)
             return 1f;
@@ -219,11 +217,7 @@ public class CombatManager : MonoBehaviour
             totalBase = roll + cardBonus;
             totalFinal = Mathf.RoundToInt(totalBase * multiplier);
         }
-        else if (currentCombatMode == CombatMode.Passive)
-        {
-            totalBase = roll + cardBonus;
-            totalFinal = totalBase;
-        }
+
         else if (currentCombatMode == CombatMode.PlayerChooses)
         {
             totalBase = roll;
@@ -245,6 +239,12 @@ public class CombatManager : MonoBehaviour
         if (consumedTurn)
         {
             turnsUsedThisCombat++;
+        }
+
+                // Auto-guardar despues de cada ataque
+        if (RunSaveManager.Instance != null)
+        {
+            RunSaveManager.Instance.AutoSave();
         }
     }
 
@@ -389,13 +389,6 @@ public class CombatManager : MonoBehaviour
             playerManager.RegisterEnemyDefeated();
             playerManager.RegisterCombatWon();
 
-            if (currentCombatMode == CombatMode.Passive)
-            {
-                rewardCard = GetRandomAffinityType();
-                playerManager.AddCards(rewardCard, 1);
-                OnCombatEnd?.Invoke(victory, finalScore, rewardCard, 0);
-            }
-            else if (currentCombatMode == CombatMode.PlayerChooses || currentCombatMode == CombatMode.TraditionalRPG)
             {
                 if (lastMultiplier >= 1.5f) 
                 {
@@ -455,6 +448,11 @@ public class CombatManager : MonoBehaviour
             {
                 curseManager.OnDefeat();
             }
+        }
+        // Auto-guardar al terminar combate
+        if (RunSaveManager.Instance != null)
+        {
+            RunSaveManager.Instance.AutoSave();
         }
     }
 
@@ -527,6 +525,23 @@ public class CombatManager : MonoBehaviour
     public void ResetPostCombatFlag()
     {
         isProcessingPostCombat = false;
+    }
+
+    /// <summary>
+    /// Obtiene los turnos usados en este combate (para guardado)
+    /// </summary>
+    public int GetTurnsUsedThisCombat()
+    {
+        return turnsUsedThisCombat;
+    }
+
+    /// <summary>
+    /// Establece los turnos usados (para restaurar guardado)
+    /// </summary>
+    public void SetTurnsUsedThisCombat(int turns)
+    {
+        turnsUsedThisCombat = turns;
+        currentTurnNumber = turns;
     }
 
     // GETTERS

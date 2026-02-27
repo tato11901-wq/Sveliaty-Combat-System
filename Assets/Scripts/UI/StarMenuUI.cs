@@ -3,82 +3,217 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Controlador de la UI del menú de inicio
-/// Permite seleccionar el modo de juego
+/// UI del menu de inicio
+/// Muestra opciones para iniciar nueva run o continuar run guardada
 /// </summary>
 public class StartMenuUI : MonoBehaviour
 {
-    [Header("Referencias")]
-    public Button passiveModeButton;
-    public Button playerChoosesModeButton;
-    public Button traditionalRPGModeButton;
-    public TextMeshProUGUI titleText;
+    [Header("References")]
+    public GameManager gameManager;
+    public RunSaveManager runSaveManager;
+    public GameObject bestiaryPanel; // Panel del bestiario
+    public GameObject[] Combatpanels;
 
-    [Header("Textos Opcionales")]
-    public TextMeshProUGUI passiveModeDescription;
-    public TextMeshProUGUI playerChoosesModeDescription;
+    [Header("UI Elements")]
+    public Button continueButton;
+    public Button newRunPlayerChoosesButton;
+    public Button newRunRPGButton;
+    public Button bestiaryButton;
+    public Button quitButton;
+
+    [Header("Continue Button Info")]
+    public TextMeshProUGUI continueButtonText;
+    public GameObject continueInfoPanel; // Panel con info de la run guardada
 
     void Start()
     {
         // Configurar botones
-        if (passiveModeButton != null)
-        {
-            passiveModeButton.onClick.AddListener(() => StartGame(CombatMode.Passive));
-        }
+        if (continueButton != null)
+            continueButton.onClick.AddListener(OnContinuePressed);
+        
+        
+        if (newRunPlayerChoosesButton != null)
+            newRunPlayerChoosesButton.onClick.AddListener(() => OnNewRunPressed(CombatMode.PlayerChooses));
+        
+        if (newRunRPGButton != null)
+            newRunRPGButton.onClick.AddListener(() => OnNewRunPressed(CombatMode.TraditionalRPG));
 
-        if (playerChoosesModeButton != null)
+        if (bestiaryButton != null)
         {
-            playerChoosesModeButton.onClick.AddListener(() => StartGame(CombatMode.PlayerChooses));
+            bestiaryPanel.SetActive(false); // Asegurarse de que el panel del bestiario esté oculto al inicio
+            bestiaryButton.onClick.AddListener(() => 
+            {
+                // Aquí puedes cargar la escena del bestiario o activar su panel
+                bestiaryPanel.SetActive(true);
+                Debug.Log("Botón de Bestiario presionado");
+            });
         }
+        
+        if (quitButton != null)
+            quitButton.onClick.AddListener(OnQuitPressed);
 
-        if (traditionalRPGModeButton != null)
-        {
-            traditionalRPGModeButton.onClick.AddListener(() => StartGame(CombatMode.TraditionalRPG));
-        }
-
-        // Configurar textos descriptivos (opcional)
-        SetupDescriptions();
+        // Actualizar UI
+        RefreshUI();
     }
 
-    void SetupDescriptions()
+    void OnEnable()
     {
-        if (passiveModeDescription != null)
+        RefreshUI();
+    }
+
+    /// <summary>
+    /// Actualiza la UI segun si hay run guardada o no
+    /// </summary>
+    void RefreshUI()
+    {
+        if (runSaveManager == null)
         {
-            passiveModeDescription.text = "Modo automático\nSuma cartas del tipo del enemigo\nIdeal para principiantes";
+            Debug.LogError("RunSaveManager no asignado");
+            return;
         }
 
-        if (playerChoosesModeDescription != null)
+        bool hasSavedRun = runSaveManager.HasSavedRun();
+
+        // Mostrar/ocultar boton continuar
+        if (continueButton != null)
         {
-            playerChoosesModeDescription.text = "Modo avanzado\nElige tu tipo de ataque\nExplota las debilidades para mejores recompensas";
+            continueButton.gameObject.SetActive(hasSavedRun);
+        }
+
+        // Actualizar texto del boton
+        if (hasSavedRun && continueButtonText != null)
+        {
+            RunSaveManager.RunSaveData saveInfo = runSaveManager.GetSavedRunInfo();
+            
+            if (saveInfo != null)
+            {
+                continueButtonText.text = "CONTINUAR\n" + 
+                                         "HP: " + saveInfo.playerCurrentLife + "/" + saveInfo.playerMaxLife + "\n" +
+                                         "Score: " + saveInfo.playerScore;
+            }
+            else
+            {
+                continueButtonText.text = "CONTINUAR";
+            }
+        }
+
+        // Mostrar info adicional si existe panel
+        if (continueInfoPanel != null)
+        {
+            continueInfoPanel.SetActive(hasSavedRun);
+            
+            if (hasSavedRun)
+            {
+                // Aqui podrias añadir mas info visual
+            }
         }
     }
 
     /// <summary>
-    /// Inicia el juego con el modo seleccionado
+    /// Continuar run guardada
     /// </summary>
-    void StartGame(CombatMode mode)
+    void OnContinuePressed()
     {
-        Debug.Log($"Modo seleccionado: {mode}");
-
-        if (GameManager.Instance != null)
+        if (runSaveManager == null)
         {
-            GameManager.Instance.StartNewRun(mode);
+            Debug.LogError("RunSaveManager no asignado");
+            return;
+        }
+
+        if (!runSaveManager.HasSavedRun())
+        {
+            Debug.LogWarning("No hay run guardada para continuar");
+            return;
+        }
+
+        Debug.Log("Continuando run guardada...");
+
+        // Cargar run
+        bool success = runSaveManager.LoadSavedRun();
+
+        if (success)
+        {
+            // Ocultar menu
+            gameObject.SetActive(false);
+            
+            // Activar gameplay panel
+            if (gameManager != null)
+            {
+                for (int i = 0; i < Combatpanels.Length; i++)
+                {
+                    Combatpanels[i].SetActive(true);
+                }
+
+
+            }
         }
         else
         {
-            Debug.LogError("GameManager.Instance es null");
+            Debug.LogError("Error al cargar run guardada");
+            // Aqui podrias mostrar un mensaje de error al jugador
         }
     }
 
     /// <summary>
-    /// Actualizar UI cuando el panel se activa
+    /// Iniciar nueva run
     /// </summary>
-    void OnEnable()
+    void OnNewRunPressed(CombatMode mode)
     {
-        // Puedes añadir animaciones o efectos aquí
-        if (titleText != null)
+        // Si hay run guardada, preguntar confirmacion
+        if (runSaveManager != null && runSaveManager.HasSavedRun())
         {
-            titleText.text = "Sveliaty";
+            ShowNewRunConfirmation(mode);
         }
+        else
+        {
+            StartNewRun(mode);
+        }
+    }
+
+    /// <summary>
+    /// Muestra panel de confirmacion para sobrescribir run guardada
+    /// </summary>
+    void ShowNewRunConfirmation(CombatMode mode)
+    {
+        // Aqui podrias crear un panel de confirmacion
+        // Por ahora, preguntamos directamente
+        
+        Debug.Log("ADVERTENCIA: Hay una run guardada. Iniciar nueva run la sobrescribira.");
+        
+        // TODO: Crear UI de confirmacion
+        // Por ahora, iniciar directamente
+        StartNewRun(mode);
+    }
+
+    void StartNewRun(CombatMode mode)
+    {
+        Debug.Log("Iniciando nueva run: " + mode);
+
+        // Eliminar guardado anterior
+        if (runSaveManager != null)
+        {
+            runSaveManager.ClearSavedRun();
+        }
+
+        // Iniciar run
+        if (gameManager != null)
+        {
+            gameManager.StartNewRun(mode);
+        }
+        else
+        {
+            Debug.LogError("GameManager no asignado");
+        }
+    }
+
+    void OnQuitPressed()
+    {
+        Debug.Log("Saliendo del juego...");
+        
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #else
+            Application.Quit();
+        #endif
     }
 }
