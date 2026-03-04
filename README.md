@@ -64,10 +64,5 @@ Todo el balance de estadísticas base de enemigos viene de **`ScriptableObjects`
 - `Assets/Scripts/Player/PlayerManager.cs`: Estadísticas actuales, cartas poseídas y curación.
 - `Assets/Scripts/Data/RunSaveManager.cs`: Lógica de auto-guardar tu progreso de Rogue-like.
 - `Assets/Scripts/Core/CurseManager.cs`: Riesgos por alargar los turnos. Maldiciones aleatorias. Eventos de roguelike puros.
-- `Assets/Scripts/Core/habilityManager.cs`*(Recomendable renombrar a AbilityManager)*: Compra y uso de ataques pre-programados con costes exóticos.
-
+- `Assets/Scripts/Core/habilityManager.cs`: Compra y uso de ataques pre-programados con costes exóticos.
 ---
-
-##  Próximos pasos y Recomendaciones de limpieza
-* Estandarizar el tipo de CamelCase y PascalCase de algunos archivos (e.j., `curseManager.cs` -> `CurseManager.cs`).
-* Trasladar *ScriptableObjects* ajenos al jugador de su carpeta (como **Curses** o **Habilidades**) hacia la carpeta `Data/`.

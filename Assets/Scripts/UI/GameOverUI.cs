@@ -9,11 +9,13 @@ using TMPro;
 public class GameOverUI : MonoBehaviour
 {
     [Header("Referencias de Textos")]
+    public TextMeshProUGUI titleText; // NUEVO: Para cambiar el título gigante entre Game Over y Victoria
     public TextMeshProUGUI scoreText;
     public TextMeshProUGUI fuerzaCardsText;
     public TextMeshProUGUI agilidadCardsText;
     public TextMeshProUGUI destrezaCardsText;
-    public TextMeshProUGUI defeatedByText;
+    public TextMeshProUGUI defeatedByHeaderText; // NUEVO: Para el texto superior ("Enemigo final" o "Fuiste derrotado por")
+    public TextMeshProUGUI defeatedByText; // SOLO cambiará al nombre del enemigo
 
     [Header("Referencias de Imagen")]
     public Image defeatedBySprite;
@@ -33,9 +35,15 @@ public class GameOverUI : MonoBehaviour
     /// <summary>
     /// Muestra la pantalla de Game Over con las estadísticas finales
     /// </summary>
-    public void ShowGameOver(int finalScore, int fuerzaCards, int agilidadCards, int destrezaCards, EnemyInstance defeatedBy)
+    public void ShowGameOver(int finalScore, int fuerzaCards, int agilidadCards, int destrezaCards, EnemyInstance defeatedBy, bool isVictory = false)
     {
         Debug.Log($"💀 Mostrando Game Over - Score: {finalScore}");
+
+        // Actualizar título (si está asignado)
+        if (titleText != null)
+        {
+            titleText.text = isVictory ? "Victoria definitiva" : "Game Over";
+        }
 
         // Actualizar textos de estadísticas
         if (scoreText != null)
@@ -58,12 +66,55 @@ public class GameOverUI : MonoBehaviour
             destrezaCardsText.text = $"Destreza: {destrezaCards}";
         }
 
-        // Mostrar enemigo que te derrotó
-        if (defeatedBy != null)
+        // Mostrar enemigo que te derrotó o el boss final
+        if (isVictory)
         {
+            if (defeatedBy != null)
+            {
+                if (defeatedByHeaderText != null)
+                {
+                    defeatedByHeaderText.text = "Enemigo final";
+                }
+
+                if (defeatedByText != null)
+                {
+                    defeatedByText.text = defeatedBy.enemyData.displayName;
+                }
+
+                if (defeatedBySprite != null && defeatedBy.enemyTierData.sprite != null)
+                {
+                    defeatedBySprite.sprite = defeatedBy.enemyTierData.sprite;
+                    defeatedBySprite.enabled = true;
+                }
+            }
+            else
+            {
+                if (defeatedByHeaderText != null)
+                {
+                    defeatedByHeaderText.text = "¡FELICIDADES!";
+                }
+
+                if (defeatedByText != null)
+                {
+                    defeatedByText.text = "Has completado el Boss Rush";
+                }
+
+                if (defeatedBySprite != null)
+                {
+                    defeatedBySprite.enabled = false;
+                }
+            }
+        }
+        else if (defeatedBy != null)
+        {
+            if (defeatedByHeaderText != null)
+            {
+                defeatedByHeaderText.text = "Fuiste derrotado por";
+            }
+
             if (defeatedByText != null)
             {
-                defeatedByText.text = $"Fuiste derrotado por:\n{defeatedBy.enemyData.displayName}";
+                defeatedByText.text = defeatedBy.enemyData.displayName;
             }
 
             if (defeatedBySprite != null && defeatedBy.enemyTierData.sprite != null)
@@ -74,6 +125,11 @@ public class GameOverUI : MonoBehaviour
         }
         else
         {
+            if (defeatedByHeaderText != null)
+            {
+                defeatedByHeaderText.text = "Game Over";
+            }
+
             if (defeatedByText != null)
             {
                 defeatedByText.text = "Fuiste derrotado";

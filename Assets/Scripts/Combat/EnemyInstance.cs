@@ -32,11 +32,8 @@ public class EnemyInstance
     public void ApplyStatsMultiplier(float multiplier)
     {
         healthThreshold = UnityEngine.Mathf.RoundToInt(healthThreshold * multiplier);
-        diceCount = UnityEngine.Mathf.RoundToInt(diceCount * multiplier);
-        failureDamage = UnityEngine.Mathf.RoundToInt(failureDamage * multiplier);
 
         // Es importante multiplicar también la vida del modo RPG
         currentRPGHealth = UnityEngine.Mathf.RoundToInt(currentRPGHealth * multiplier);
-        currentRPGDiceCount = UnityEngine.Mathf.RoundToInt(currentRPGDiceCount * multiplier);
     }
 }

@@ -109,6 +109,37 @@ public class GameManager : MonoBehaviour
     void HandleRunEnded(int finalScore, int enemiesDefeated)
     {
         Debug.Log("Run terminada - Score: " + finalScore + ", Enemigos: " + enemiesDefeated);
+
+        // Si se derrotaron todos los enemigos (Boss), es una victoria
+        if (bossRushManager != null && enemiesDefeated >= bossRushManager.maxEnemiesPerRun)
+        {
+            gameInProgress = false;
+
+            gameplayPanel.SetActive(false);
+            gameOverPanel.SetActive(true);
+
+            if (gameOverUI == null)
+            {
+                Debug.LogWarning("⚠️ GameManager: gameOverUI no está asignado en el Inspector. Intentando buscarlo...");
+                if (gameOverPanel != null)
+                    gameOverUI = gameOverPanel.GetComponentInChildren<GameOverUI>(true);
+                
+                if (gameOverUI == null)
+                    gameOverUI = Object.FindObjectOfType<GameOverUI>(true);
+            }
+
+            if (gameOverUI != null && PlayerManager.Instance != null)
+            {
+                int fCards = PlayerManager.Instance.GetCards(AffinityType.Fuerza);
+                int aCards = PlayerManager.Instance.GetCards(AffinityType.Agilidad);
+                int dCards = PlayerManager.Instance.GetCards(AffinityType.Destreza);
+
+                EnemyInstance lastBoss = combatManager != null ? combatManager.GetCurrentEnemy() : null;
+
+                // Llamar con isVictory = true, y pasando al líder final
+                gameOverUI.ShowGameOver(finalScore, fCards, aCards, dCards, lastBoss, true);
+            }
+        }
     }
 
     void HandleGameOver(int finalScore, int fuerzaCards, int agilidadCards, int destrezaCards, EnemyInstance defeatedBy)
