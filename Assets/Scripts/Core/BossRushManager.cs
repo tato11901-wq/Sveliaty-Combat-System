@@ -114,15 +114,18 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
-        // Si es el boss final, modificar stats
+        float currentMultiplier = 1f;
+
+        // Si es el boss final, aplicamos el multiplicador al iniciar el combate
         if (isFinalBoss)
         {
-            ApplyBossMultiplier(enemyData, tier);
+            currentMultiplier = bossStatsMultiplier;
+            Debug.Log("Boss stats multiplicados x" + bossStatsMultiplier);
         }
 
         if (combatManager != null)
         {
-            combatManager.StartCombat(enemyData, tier, defaultMode);
+            combatManager.StartCombat(enemyData, tier, defaultMode, currentMultiplier);
         }
         else
         {
@@ -224,26 +227,7 @@ public class BossRushManager : MonoBehaviour
         return (randomEnemy, desiredTier);
     }
 
-    /// <summary>
-    /// Aplica multiplicador de stats al boss final
-    /// </summary>
-    void ApplyBossMultiplier(EnemyData enemyData, EnemyTier tier)
-    {
-        // Buscar el tier data correspondiente
-        foreach (var tierData in enemyData.enemyTierData)
-        {
-            if (tierData.enemyTier == tier)
-            {
-                // Multiplicar stats
-                tierData.healthThreshold = Mathf.RoundToInt(tierData.healthThreshold * bossStatsMultiplier);
-                tierData.diceCount = Mathf.RoundToInt(tierData.diceCount * bossStatsMultiplier);
-                tierData.failureDamage = Mathf.RoundToInt(tierData.failureDamage * bossStatsMultiplier);
-                
-                Debug.Log("Boss stats multiplicados x" + bossStatsMultiplier);
-                break;
-            }
-        }
-    }
+
 
     void HandleCombatEnd(bool victory, int currentScore, AffinityType rewardCard, int lifeLost)
     {

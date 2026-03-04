@@ -143,8 +143,6 @@ public class StartMenuUI : MonoBehaviour
                 {
                     Combatpanels[i].SetActive(true);
                 }
-
-
             }
         }
         else

@@ -345,11 +345,11 @@ private void OnDisable()
         }
         else 
         {
-            vidaText.text = enemy.enemyTierData.healthThreshold.ToString();
+            vidaText.text = enemy.healthThreshold.ToString();
         }
 
         intentosText.text = enemy.attemptsRemaining.ToString();
-        dadosText.text = enemy.enemyTierData.diceCount.ToString();
+        dadosText.text = enemy.diceCount.ToString();
 
         UpdateModeUI();
         UpdatePlayerLifeUI();

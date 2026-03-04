@@ -42,7 +42,7 @@ public class CombatManager : MonoBehaviour
     /// <summary>
     /// Inicia UN combate específico (llamado por BossRushManager)
     /// </summary>
-    public void StartCombat(EnemyData enemyData, EnemyTier tier, CombatMode mode)
+    public void StartCombat(EnemyData enemyData, EnemyTier tier, CombatMode mode, float statsMultiplier = 1f)
     {
         currentCombatMode = mode;
 
@@ -65,6 +65,10 @@ public class CombatManager : MonoBehaviour
         }
         
         currentEnemy = new EnemyInstance(enemyData, tierData);
+        if (statsMultiplier != 1f)
+        {
+            currentEnemy.ApplyStatsMultiplier(statsMultiplier);
+        }
         combatEnded = false;
         isProcessingPostCombat = false;
 
@@ -274,7 +278,7 @@ public class CombatManager : MonoBehaviour
     {
         int baseCount = currentCombatMode == CombatMode.TraditionalRPG 
             ? currentEnemy.currentRPGDiceCount 
-            : currentEnemy.enemyTierData.diceCount;
+            : currentEnemy.diceCount;
         
         baseCount += ability.diceModifier;
         
@@ -317,8 +321,8 @@ public class CombatManager : MonoBehaviour
         {
             bool invertedCondition = curseManager != null && curseManager.HasInvertedVictoryCondition();
             
-            bool normalSuccess = totalFinal >= currentEnemy.enemyTierData.healthThreshold;
-            victory = invertedCondition ? (totalFinal <= currentEnemy.enemyTierData.healthThreshold) : normalSuccess;
+            bool normalSuccess = totalFinal >= currentEnemy.healthThreshold;
+            victory = invertedCondition ? (totalFinal <= currentEnemy.healthThreshold) : normalSuccess;
             
             if (victory)
             {
@@ -426,11 +430,11 @@ public class CombatManager : MonoBehaviour
             }
             else
             {
-                playerManager.ModifyHealth(-currentEnemy.enemyTierData.failureDamage);
+                playerManager.ModifyHealth(-currentEnemy.failureDamage);
                 
                 if (playerManager.IsAlive())
                 {
-                    OnCombatEnd?.Invoke(false, finalScore, rewardCard, currentEnemy.enemyTierData.failureDamage);
+                    OnCombatEnd?.Invoke(false, finalScore, rewardCard, currentEnemy.failureDamage);
                 }
                 else
                 {
