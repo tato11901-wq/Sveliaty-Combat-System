@@ -14,6 +14,9 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private int maxLife = 100;
     private int currentLife;
 
+    public int CurrentLife => currentLife;
+    public int MaxLife => maxLife;
+
     [Header("Inventario de Cartas")]
     private Dictionary<AffinityType, int> cards = new Dictionary<AffinityType, int>()
     {
@@ -184,8 +187,10 @@ public class PlayerManager : MonoBehaviour
     /// <summary>
     /// Quita una carta aleatoria (para maldiciones)
     /// </summary>
-    public bool RemoveRandomCard()
+    public bool RemoveRandomCard(out AffinityType removedType)
     {
+        removedType = default;
+
         // Obtener tipos con cartas disponibles
         List<AffinityType> availableTypes = new List<AffinityType>();
         foreach (AffinityType type in Enum.GetValues(typeof(AffinityType)))
@@ -202,6 +207,7 @@ public class PlayerManager : MonoBehaviour
 
         AffinityType randomType = availableTypes[UnityEngine.Random.Range(0, availableTypes.Count)];
         RemoveCards(randomType, 1);
+        removedType = randomType;
         return true;
     }
 

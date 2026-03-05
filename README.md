@@ -55,6 +55,12 @@ Para no entorpecer el árbol de objetos de Unity con búsquedas (FindObjectOfTyp
 Todo el balance de estadísticas base de enemigos viene de **`ScriptableObjects`**, para permitir el balance rápido desde el inspector de Unity, pero en tiempo de juego para no ensuciarlos se duplica la información a su clase **`Instance`**.
 - Ej: Un enemigo usa como base la plantilla estadística de `EnemyData`, pero en la arena el combate existe un objeto de paso vivo de la clase `EnemyInstance`.
 
+### 4. Capas de "Game Feel" (DOTween)
+El proyecto utiliza un sistema de animaciones procedimentales para mejorar la experiencia de usuario sin depender de archivos de animación estáticos (`.anim`):
+- **Feedback de Combate**: Sacudidas de cámara (`DOShake`), parpadeos de color y contracción de sprites al recibir impactos.
+- **UI Magnética**: Los botones e iconos tienen un sistema de inclinación 3D que sigue el cursor del ratón, dando profundidad al plano 2D.
+- **Transiciones Suaves**: Los paneles críticos (Victoria, Derrota, Selección) utilizan un sistema equilibrado de *Fade-in + Slide Up* para evitar apariciones bruscas.
+
 ---
 
 ## 🛠 Entidades Principales (Para Navegación Rápida)

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 
 public class CurseChoiceUI : MonoBehaviour
 {
@@ -25,6 +26,10 @@ public class CurseChoiceUI : MonoBehaviour
     
     private List<CurseData> currentOptions;
     private CurseData selectedCurse;
+    private string lastEffectGeneratedDetails;
+    
+    private Vector2[] cardOriginalPositions;
+    private Vector3[] cardOriginalScales;
     
     void Start()
     {
@@ -51,6 +56,21 @@ public class CurseChoiceUI : MonoBehaviour
         if (descriptionPanel != null)
         {
             descriptionPanel.SetActive(false);
+        }
+
+        // Guardar posiciones para las animaciones
+        if (cardButtons != null)
+        {
+            cardOriginalPositions = new Vector2[cardButtons.Length];
+            cardOriginalScales = new Vector3[cardButtons.Length];
+            for (int i = 0; i < cardButtons.Length; i++)
+            {
+                if (cardButtons[i] != null)
+                {
+                    cardOriginalPositions[i] = cardButtons[i].GetComponent<RectTransform>().anchoredPosition;
+                    cardOriginalScales[i] = cardButtons[i].transform.localScale;
+                }
+            }
         }
     }
     
@@ -89,13 +109,27 @@ public class CurseChoiceUI : MonoBehaviour
         
         Debug.Log("Panel de 3 cartas activado");
         
-        // Configurar los 3 botones
+        // Configurar los 3 botones y animar su entrada
         for (int i = 0; i < 3; i++)
         {
             if (cardButtons != null && cardButtons.Length > i && cardButtons[i] != null)
             {
+                RectTransform rt = cardButtons[i].GetComponent<RectTransform>();
+                
+                // Reiniciar estado visual
+                rt.DOKill();
+                rt.anchoredPosition = new Vector2(rt.anchoredPosition.x + 1000f, rt.anchoredPosition.y);
+                cardButtons[i].transform.localScale = cardOriginalScales[i];
+                cardButtons[i].transform.localRotation = Quaternion.identity;
+                cardButtons[i].gameObject.SetActive(true);
                 cardButtons[i].interactable = true;
                 
+                // Animación de "Reparto" (de derecha a izquierda con retraso)
+                rt.DOAnchorPos(cardOriginalPositions[i], 0.6f)
+                  .SetEase(Ease.OutBack)
+                  .SetDelay(i * 0.15f)
+                  .SetUpdate(true);
+
                 int index = i; // Closure
                 cardButtons[i].onClick.RemoveAllListeners();
                 cardButtons[i].onClick.AddListener(() => OnCardSelected(index));
@@ -115,22 +149,32 @@ public class CurseChoiceUI : MonoBehaviour
         }
         
         selectedCurse = currentOptions[index];
-        Debug.Log("Carta " + index + " seleccionada: " + selectedCurse.curseName);
         
-        // Deshabilitar todos los botones
+        // Deshabilitar todos los botones para evitar doble click
         if (cardButtons != null)
         {
+            foreach (var b in cardButtons) if (b != null) b.interactable = false;
+        }
+
+        // Animar la carta seleccionada (Volteo 3D)
+        if (cardButtons != null && index < cardButtons.Length)
+        {
+            Button btn = cardButtons[index];
+            btn.transform.DOScale(btn.transform.localScale * 1.2f, 0.3f).SetEase(Ease.OutQuad).SetUpdate(true);
+            btn.transform.DORotate(new Vector3(0, 180, 0), 0.6f, RotateMode.LocalAxisAdd).SetEase(Ease.InOutQuad).SetUpdate(true);
+            
+            // Ocultar las otras cartas suavemente
             for (int i = 0; i < cardButtons.Length; i++)
             {
-                if (cardButtons[i] != null)
+                if (i != index && cardButtons[i] != null)
                 {
-                    cardButtons[i].interactable = false;
+                    cardButtons[i].transform.DOScale(Vector3.zero, 0.4f).SetEase(Ease.InBack).SetUpdate(true);
                 }
             }
         }
-        
-        // Dar la maldicion al jugador (aplicar efectos instantaneos si aplica)
-        curseManager.ObtainCurse(selectedCurse);
+
+        // Dar la maldicion al jugador y guardar mensaje de eventos si aplica
+        lastEffectGeneratedDetails = curseManager.ObtainCurse(selectedCurse);
         
         // Esperar un momento antes de cambiar a la fase de descripcion
         StartCoroutine(TransitionToDescriptionPhase());
@@ -185,6 +229,12 @@ public class CurseChoiceUI : MonoBehaviour
         if (curseDescriptionText != null)
         {
             curseDescriptionText.text = selectedCurse.description;
+            
+            // Si la maldición generó un reporte detallado (como pérdida de cartas exactas), añadirlo.
+            if (!string.IsNullOrEmpty(lastEffectGeneratedDetails))
+            {
+                curseDescriptionText.text += lastEffectGeneratedDetails;
+            }
         }
         
         if (curseTypeText != null)

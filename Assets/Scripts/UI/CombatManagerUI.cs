@@ -3,6 +3,8 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
+using UnityEngine.EventSystems;
 
 public class CombatUIManager : MonoBehaviour
 {
@@ -102,10 +104,22 @@ public class CombatUIManager : MonoBehaviour
     public TextMeshProUGUI curseNotificationText;
     public Button curseNotificationButton;
 
+    [Header("Ajustes de Interfaz")]
+    public Toggle easyModeToggle; // NUEVO: Alternar el modo fácil (mostrar afinidades)
+
     private AffinityType? currentExpandedType = null;
+    private bool isEasyModeEnabled = false;
+
+    // --- VARIABLES DE TILT 3D ---
+    private Dictionary<Button, bool> buttonHoverStates = new Dictionary<Button, bool>();
+    private Dictionary<Button, Vector3> buttonOriginalRotations = new Dictionary<Button, Vector3>();
+    public float tiltAmount = 12f;
+    public float smoothSpeed = 15f;
+    private Canvas parentCanvas;
 
 void Start()
 {
+    parentCanvas = GetComponentInParent<Canvas>();
     attackButton.onClick.AddListener(() => combatManager.PlayerAttempt());
 
     fuerzaMainButton.onClick.AddListener(() => ToggleAbilityPanel(AffinityType.Fuerza));
@@ -144,8 +158,110 @@ void Start()
         backButton.onClick.AddListener(() => OnBackButtonPressed());
     }
 
+    // NUEVO: Toggle de Modo Fácil
+    if (easyModeToggle != null)
+    {
+        easyModeToggle.onValueChanged.AddListener((isOn) => 
+        {
+            isEasyModeEnabled = isOn;
+            UpdateAffinitiesUI();
+        });
+        isEasyModeEnabled = easyModeToggle.isOn;
+    }
+
     HideAllAbilityPanels();
     HideBackButton();
+
+    SetupButtonAnimations();
+}
+
+void SetupButtonAnimations()
+{
+    // Botones Principales
+    AnimateButton(fuerzaMainButton);
+    AnimateButton(agilidadMainButton);
+    AnimateButton(destrezaMainButton);
+
+    // Botones de Habilidades
+    AnimateButton(fuerzaAbility1Button);
+    AnimateButton(fuerzaAbility2Button);
+    AnimateButton(fuerzaAbility3Button);
+
+    AnimateButton(agilidadAbility1Button);
+    AnimateButton(agilidadAbility2Button);
+    AnimateButton(agilidadAbility3Button);
+
+    AnimateButton(destrezaAbility1Button);
+    AnimateButton(destrezaAbility2Button);
+    AnimateButton(destrezaAbility3Button);
+
+    // Botones de recompensa
+    AnimateButton(selectFuerzaButton);
+    AnimateButton(selectAgilidadButton);
+    AnimateButton(selectDestrezaButton);
+
+    // Botones simples
+    AnimateButton(attackButton);
+    AnimateButton(backButton);
+    AnimateButton(passiveNextEnemyButton);
+    AnimateButton(defeatNextEnemyButton);
+    AnimateButton(curseNotificationButton);
+}
+
+void AnimateButton(Button btn)
+{
+    if (btn == null) return;
+
+    EventTrigger trigger = btn.gameObject.GetComponent<EventTrigger>();
+    if (trigger == null)
+    {
+        trigger = btn.gameObject.AddComponent<EventTrigger>();
+    }
+
+    Vector3 originalScale = btn.transform.localScale;
+    Vector3 originalRotation = btn.transform.localEulerAngles;
+    
+    // Registrar el botón para su trackeo en el Update
+    if (!buttonHoverStates.ContainsKey(btn)) 
+    {
+        buttonHoverStates.Add(btn, false);
+        buttonOriginalRotations.Add(btn, originalRotation);
+    }
+
+    // Hover Enter
+    EventTrigger.Entry entryEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+    entryEnter.callback.AddListener((data) => { 
+        if (!btn.interactable) return;
+        btn.transform.DOScale(originalScale * 1.05f, 0.2f).SetEase(Ease.OutBack).SetUpdate(true); 
+        buttonHoverStates[btn] = true;
+    });
+    trigger.triggers.Add(entryEnter);
+
+    // Hover Exit
+    EventTrigger.Entry entryExit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+    entryExit.callback.AddListener((data) => { 
+        if (!btn.interactable) return;
+        btn.transform.DOScale(originalScale, 0.2f).SetEase(Ease.OutQuad).SetUpdate(true); 
+        buttonHoverStates[btn] = false;
+        
+        // Restaurar rotación suavemente
+        btn.transform.DOLocalRotate(originalRotation, 0.3f).SetEase(Ease.OutQuad).SetUpdate(true);
+    });
+    trigger.triggers.Add(entryExit);
+
+    // Click Down
+    EventTrigger.Entry entryDown = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown };
+    entryDown.callback.AddListener((data) => { 
+        if (btn.interactable) btn.transform.DOScale(originalScale * 0.95f, 0.1f).SetEase(Ease.InQuad).SetUpdate(true); 
+    });
+    trigger.triggers.Add(entryDown);
+
+    // Click Up
+    EventTrigger.Entry entryUp = new EventTrigger.Entry { eventID = EventTriggerType.PointerUp };
+    entryUp.callback.AddListener((data) => { 
+        if (btn.interactable) btn.transform.DOScale(originalScale * 1.05f, 0.1f).SetEase(Ease.OutQuad).SetUpdate(true); 
+    });
+    trigger.triggers.Add(entryUp);
 }
 
     void ToggleAbilityPanel(AffinityType type)
@@ -334,8 +450,27 @@ private void OnDisable()
             combatUICanvasGroup.interactable = true;
             combatUICanvasGroup.blocksRaycasts = true;
         }
-        
-        enemySprite.sprite = enemy.enemyTierData.sprite;
+        // Asegurar que el enemigo aparezca visible (limpiar restos de animaciones anteriores)
+        if (enemySprite != null)
+        {
+            enemySprite.transform.DOKill();
+            enemySprite.DOKill();
+            
+            if (enemy.enemyTierData.sprite == null)
+            {
+                Debug.LogWarning($"El enemigo {enemy.enemyData.displayName} no tiene un sprite asignado!");
+                enemySprite.color = new Color(1, 1, 1, 0); // Ocultar si no hay imagen
+            }
+            else
+            {
+                enemySprite.sprite = enemy.enemyTierData.sprite;
+                enemySprite.color = Color.white;
+            }
+            
+            enemySprite.transform.localScale = Vector3.one;
+            enemySprite.gameObject.SetActive(true);
+        }
+
         enemyNameText.text = enemy.enemyData.displayName;
         enemyTierText.text = enemy.enemyTierData.GetEnemyTier();
 
@@ -395,6 +530,30 @@ private void OnDisable()
             vidaText.text = Mathf.Max(0, currentEnemy.currentRPGHealth).ToString();
         }
         
+        // --- GAME FEEL: Animación de impacto ---
+        // 1. Efecto en la cámara/pantalla general
+        Camera mainCam = Camera.main;
+        if (mainCam != null)
+        {
+            mainCam.transform.DOComplete();
+            mainCam.transform.DOShakePosition(0.2f, 0.3f, 20, 90, false, true);
+        }
+
+        // 2. Efecto en el enemigo (Flash de daño y contracción)
+        if (enemySprite != null)
+        {
+            enemySprite.transform.DOComplete();
+            enemySprite.DOComplete();
+
+            enemySprite.transform.DOPunchScale(new Vector3(-0.1f, -0.1f, 0), 0.2f, 5, 1f);
+            
+            // Si el daño fue fuerte (multiplicador debilidad), destello más intenso
+            if (multiplier > 1.1f)
+            {
+                enemySprite.DOColor(Color.red, 0.1f).OnComplete(() => enemySprite.DOColor(Color.white, 0.1f));
+            }
+        }
+        
         UpdateAffinitiesUI();
 
         if (currentExpandedType.HasValue)
@@ -411,7 +570,30 @@ private void OnDisable()
 
         if (victory)
         {
+            // --- GAME FEEL: Animación de Muerte del Enemigo ---
+            if (enemySprite != null)
+            {
+                enemySprite.transform.DOComplete();
+                enemySprite.DOComplete();
+                enemySprite.DOFade(0f, 0.4f).SetUpdate(true);
+                enemySprite.transform.DOScale(Vector3.zero, 0.4f).SetEase(Ease.InBack).SetUpdate(true);
+            }
+
+            // Panel de victoria pasiva - Suavizado: Fade-in + Slide Up
             passiveEndPanel.SetActive(true);
+            CanvasGroup passiveCG = passiveEndPanel.GetComponent<CanvasGroup>();
+            if (passiveCG == null) passiveCG = passiveEndPanel.AddComponent<CanvasGroup>();
+            
+            // Resetear estado inicial
+            passiveCG.alpha = 0f;
+            RectTransform passiveRT = passiveEndPanel.GetComponent<RectTransform>();
+            float originalY = passiveRT.anchoredPosition.y;
+            passiveRT.anchoredPosition = new Vector2(passiveRT.anchoredPosition.x, originalY - 20f);
+            passiveEndPanel.transform.localScale = Vector3.one;
+
+            // Animación suave
+            passiveCG.DOFade(1f, 0.6f).SetUpdate(true);
+            passiveRT.DOAnchorPosY(originalY, 0.6f).SetEase(Ease.OutCubic).SetUpdate(true);
             
             if (rewardCard == default && 
                 (combatManager.GetCombatMode() == CombatMode.PlayerChooses || 
@@ -426,7 +608,32 @@ private void OnDisable()
         }
         else
         {
+            // --- GAME FEEL: Animación de Daño al Jugador ---
+            if (lifeLost > 0)
+            {
+                Camera mainCam = Camera.main;
+                if (mainCam != null)
+                {
+                    mainCam.transform.DOComplete();
+                    mainCam.transform.DOShakePosition(0.5f, 0.5f, 30, 90f);
+                }
+            }
+
             defeatPanel.SetActive(true);
+            CanvasGroup defeatCG = defeatPanel.GetComponent<CanvasGroup>();
+            if (defeatCG == null) defeatCG = defeatPanel.AddComponent<CanvasGroup>();
+            
+            // Resetear estado inicial (igual que victoria)
+            defeatCG.alpha = 0f;
+            RectTransform defeatRT = defeatPanel.GetComponent<RectTransform>();
+            float dOriginalY = defeatRT.anchoredPosition.y;
+            defeatRT.anchoredPosition = new Vector2(defeatRT.anchoredPosition.x, dOriginalY - 20f);
+            defeatPanel.transform.localScale = Vector3.one;
+
+            // Animación suave (igual que victoria)
+            defeatCG.DOFade(1f, 0.6f).SetUpdate(true);
+            defeatRT.DOAnchorPosY(dOriginalY, 0.6f).SetEase(Ease.OutCubic).SetUpdate(true);
+
             defeatMessageText.text = $"DERROTA\n\nPuntuación: {finalScore}";
 
             if (lifeLost > 0)
@@ -440,7 +647,31 @@ private void OnDisable()
 
     void HandleWaitingForCardSelection(int finalScore)
     {
+        // --- GAME FEEL: Muerte del enemigo aquí también ---
+        if (enemySprite != null)
+        {
+            enemySprite.transform.DOComplete();
+            enemySprite.DOComplete();
+            enemySprite.DOFade(0f, 0.4f).SetUpdate(true);
+            enemySprite.transform.DOScale(Vector3.zero, 0.4f).SetEase(Ease.InBack).SetUpdate(true);
+        }
+
         playerChoosesVictoryPanel.SetActive(true);
+        
+        CanvasGroup choiceCG = playerChoosesVictoryPanel.GetComponent<CanvasGroup>();
+        if (choiceCG == null) choiceCG = playerChoosesVictoryPanel.AddComponent<CanvasGroup>();
+        
+        // Resetear estado inicial
+        choiceCG.alpha = 0f;
+        RectTransform choiceRT = playerChoosesVictoryPanel.GetComponent<RectTransform>();
+        float cOriginalY = choiceRT.anchoredPosition.y;
+        choiceRT.anchoredPosition = new Vector2(choiceRT.anchoredPosition.x, cOriginalY - 20f);
+        playerChoosesVictoryPanel.transform.localScale = Vector3.one;
+
+        // Animación suave
+        choiceCG.DOFade(1f, 0.6f).SetUpdate(true);
+        choiceRT.DOAnchorPosY(cOriginalY, 0.6f).SetEase(Ease.OutCubic).SetUpdate(true);
+        
         playerChoosesVictoryText.text = $"¡VICTORIA!\n\nPuntuación: {finalScore}\n\n Elige tu recompensa:";
     }
 
@@ -498,7 +729,19 @@ private void OnDisable()
         Image buttonImage = button.GetComponent<Image>();
         if (buttonImage == null) return;
 
-        if (!AffinityDiscoveryTracker.IsDiscovered(enemy.id, type))
+        if (!isEasyModeEnabled)
+        {
+            buttonImage.color = colorNeutral;
+            return;
+        }
+
+        bool isDiscovered = false;
+        if (BestiaryManager.Instance != null)
+        {
+            isDiscovered = BestiaryManager.Instance.IsAffinityDiscovered(enemy.id, type);
+        }
+
+        if (!isDiscovered)
         {
             buttonImage.color = colorDesconocido;
             return;

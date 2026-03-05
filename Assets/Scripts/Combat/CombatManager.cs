@@ -210,7 +210,10 @@ public class CombatManager : MonoBehaviour
         
         if (currentCombatMode == CombatMode.PlayerChooses || currentCombatMode == CombatMode.TraditionalRPG)
         {
-            AffinityDiscoveryTracker.RegisterDiscovery(currentEnemy.enemyData.id, attackType);
+            if (BestiaryManager.Instance != null)
+            {
+                BestiaryManager.Instance.RegisterAffinityDiscovered(currentEnemy.enemyData.id, attackType);
+            }
         }
         
         int totalBase = 0;

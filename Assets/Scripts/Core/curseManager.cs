@@ -69,15 +69,17 @@ public class CurseManager : MonoBehaviour
     // OBTENER MALDICIÓN
     // =========================
 
-    public void ObtainCurse(CurseData curse)
+    public string ObtainCurse(CurseData curse)
     {
-        if (curse == null) return;
+        if (curse == null) return "";
+
+        string executionDetails = "";
 
         Debug.Log($"Maldición obtenida: {curse.curseName}");
 
         if (curse.activationType == CurseActivationType.Instant)
         {
-            ApplyInstantEffect(curse);
+            executionDetails = ApplyInstantEffect(curse);
         }
         else
         {
@@ -85,20 +87,29 @@ public class CurseManager : MonoBehaviour
         }
 
         OnCurseObtained?.Invoke(curse);
+        
+        return executionDetails;
     }
 
-    void ApplyInstantEffect(CurseData curse)
+    string ApplyInstantEffect(CurseData curse)
     {
         if (playerManager == null)
         {
             Debug.LogError("PlayerManager no asignado.");
-            return;
+            return "";
         }
+
+        string details = "";
 
         switch (curse.effectType)
         {
             case CurseEffect.ModifyHealth:
+                int oldLife = playerManager.CurrentLife;
                 playerManager.ModifyHealth(curse.effectValue);
+                int newLife = playerManager.CurrentLife;
+                
+                string lifeColor = curse.effectValue > 0 ? "green" : "red";
+                details = $"\n\n<b><color={lifeColor}>Vida: {oldLife} → {newLife}</color></b>";
                 break;
 
             case CurseEffect.ModifyCards:
@@ -106,15 +117,29 @@ public class CurseManager : MonoBehaviour
                 {
                     AffinityType randomType = GetRandomAffinityType();
                     playerManager.AddCards(randomType, curse.effectValue);
+                    details = $"\n\n<b><color=green>Obtuviste {curse.effectValue} carta(s) de {randomType}</color></b>";
                 }
                 else
                 {
                     int amountToRemove = Mathf.Abs(curse.effectValue);
+                    List<string> lostCards = new List<string>();
 
                     for (int i = 0; i < amountToRemove; i++)
                     {
-                        bool removed = playerManager.RemoveRandomCard();
-                        if (!removed) break;
+                        if (playerManager.RemoveRandomCard(out AffinityType removedType))
+                        {
+                            lostCards.Add(removedType.ToString());
+                        }
+                        else break;
+                    }
+                    
+                    if (lostCards.Count > 0)
+                    {
+                        details = $"\n\n<b><color=red>Perdiste: {string.Join(", ", lostCards)}</color></b>";
+                    }
+                    else
+                    {
+                        details = "\n\n<b><color=gray>No tenías cartas para perder.</color></b>";
                     }
                 }
                 break;
@@ -123,11 +148,20 @@ public class CurseManager : MonoBehaviour
                 int roll = UnityEngine.Random.Range(1, 13);
                 int effect = (roll % 2 == 0) ? roll : -roll;
 
+                int gOldLife = playerManager.CurrentLife;
                 playerManager.ModifyHealth(effect);
+                int gNewLife = playerManager.CurrentLife;
+
+                string sign = effect > 0 ? "+" : "";
+                string gColor = effect > 0 ? "green" : "red";
+                
+                details = $"\n\nLanzaste un {roll}.\n<b><color={gColor}>Vida: {gOldLife} {sign}{effect} → {gNewLife}</color></b>";
 
                 Debug.Log($"Gambling: {roll} → {(effect > 0 ? "+" : "")}{effect} HP");
                 break;
         }
+        
+        return details;
     }
 
     // =========================
