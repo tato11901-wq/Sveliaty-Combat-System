@@ -12,6 +12,8 @@ public class GameManager : MonoBehaviour
     public GameObject startMenuPanel;
     public GameObject gameplayPanel; // Panel que contiene toda la UI de juego
     public GameObject gameOverPanel;
+    public GameObject characterGeneratorPanel;
+    public GameObject matchHistoryPanel;
 
     [Header("Referencias de Managers")]
     public BossRushManager bossRushManager; // NUEVO: Ahora usa BossRushManager
@@ -73,6 +75,8 @@ public class GameManager : MonoBehaviour
         startMenuPanel.SetActive(true);
         gameplayPanel.SetActive(false);
         gameOverPanel.SetActive(false);
+        if (characterGeneratorPanel != null) characterGeneratorPanel.SetActive(false);
+        if (matchHistoryPanel != null) matchHistoryPanel.SetActive(false);
         
         gameInProgress = false;
     }
@@ -89,6 +93,8 @@ public class GameManager : MonoBehaviour
         startMenuPanel.SetActive(false);
         gameplayPanel.SetActive(true);
         gameOverPanel.SetActive(false);
+        if (characterGeneratorPanel != null) characterGeneratorPanel.SetActive(false);
+        if (matchHistoryPanel != null) matchHistoryPanel.SetActive(false);
 
         // NUEVO: Delegar a BossRushManager
         if (bossRushManager != null)

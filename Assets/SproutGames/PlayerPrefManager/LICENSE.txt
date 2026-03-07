@@ -1,0 +1,20 @@
+PlayerPrefs Manager for Unity  
+Copyright © 2025 Anilkumar TB
+
+This asset is licensed under the Unity Asset Store End User License Agreement (EULA).
+
+By purchasing, downloading, or using this asset, you agree to the terms outlined at:  
+https://unity.com/legal/as-terms
+
+You are granted a non-exclusive, non-transferable license to use this asset within your Unity projects for commercial or non-commercial purposes, subject to the following conditions:
+
+- You **may not resell**, redistribute, or share this asset or any of its contents outside of your project.
+- You **may modify** the asset for use within your own projects.
+- You **may not claim ownership** of the original source code or asset structure.
+- This asset is provided "as-is" without warranty of any kind.
+
+If you wish to redistribute or bundle this asset with other tools or packages, please contact the author for explicit permission.
+
+📧 Contact: **anilkumartb90712@gmail.com**
+
+Thank you for supporting this tool!

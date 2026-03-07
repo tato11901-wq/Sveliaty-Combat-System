@@ -23,6 +23,17 @@ public class GameOverUI : MonoBehaviour
     [Header("Botones")]
     public Button finishButton;
 
+    [Header("Contenedores")]
+    public GameObject gameOverContent; // EL PANEL que quieres ocultar (para no apagar todo el Canvas)
+
+    [Header("Referencias Externas")]
+    public CharacterManager characterGenerator; // Referencia al generador
+
+    // Variables para guardar stats finales
+    private int finalFuerza;
+    private int finalAgilidad;
+    private int finalDestreza;
+
     void Start()
     {
         // Configurar botón
@@ -54,16 +65,19 @@ public class GameOverUI : MonoBehaviour
         if (fuerzaCardsText != null)
         {
             fuerzaCardsText.text = $"Fuerza: {fuerzaCards}";
+            finalFuerza = fuerzaCards;
         }
 
         if (agilidadCardsText != null)
         {
             agilidadCardsText.text = $"Agilidad: {agilidadCards}";
+            finalAgilidad = agilidadCards;
         }
 
         if (destrezaCardsText != null)
         {
             destrezaCardsText.text = $"Destreza: {destrezaCards}";
+            finalDestreza = destrezaCards;
         }
 
         // Mostrar enemigo que te derrotó o el boss final
@@ -140,6 +154,13 @@ public class GameOverUI : MonoBehaviour
                 defeatedBySprite.enabled = false;
             }
         }
+        
+        // GUARDAR EN HISTORIAL
+        if (MatchHistoryManager.Instance != null)
+        {
+            string enemyName = defeatedBy != null && defeatedBy.enemyData != null ? defeatedBy.enemyData.displayName : (isVictory ? "Victoria Final" : "Desconocido");
+            MatchHistoryManager.Instance.SaveMatch(finalScore, fuerzaCards, agilidadCards, destrezaCards, isVictory, enemyName);
+        }
     }
 
     /// <summary>
@@ -147,15 +168,27 @@ public class GameOverUI : MonoBehaviour
     /// </summary>
     void OnFinishButtonClicked()
     {
-        Debug.Log("Finalizando partida, volviendo al menú");
+        Debug.Log("Finalizando partida, procediendo al generador de personaje");
 
-        if (GameManager.Instance != null)
+        if (characterGenerator != null)
         {
+            // Ocultar solo el contenido de Game Over, no el objeto raíz (Canvas)
+            if (gameOverContent != null) 
+                gameOverContent.SetActive(false);
+            else
+                gameObject.SetActive(false); // Fallback si no está asignado
+            
+            // Iniciar el generador con los stats finales
+            characterGenerator.InicializarPostPartida(finalFuerza, finalAgilidad, finalDestreza);
+        }
+        else if (GameManager.Instance != null)
+        {
+            // Fallback si no hay generador asignado
             GameManager.Instance.RestartGame();
         }
         else
         {
-            Debug.LogError("GameManager.Instance es null");
+            Debug.LogError("characterGenerator y GameManager.Instance son null");
         }
     }
 
