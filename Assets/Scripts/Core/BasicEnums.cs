@@ -48,12 +48,14 @@ public enum CurseActivationType
 public enum CurseEffect 
 { 
     ModifyHealth,           // Modificar HP del jugador
+    ModifyMaxHealth,        // Modificar HP maximo del jugador
     ModifyCards,            // Dar o quitar cartas
     InvertVictoryCondition, // Invertir condición de victoria (≤ en vez de ≥)
     WeakenEnemy,            // Reducir HP del enemigo
     NegateCards,            // Las cartas restan en vez de sumar
     BlockRewards,           // No dar recompensas de cartas
     EscapeCombat,           // Escapar del combate actual
-    NegateDamage,           // No recibir daño este combate
+    NegateDamage,           // Evitar el daño de PERDER un combate (sigue en pie)
+    NegateDeathBlow,        // Evitar la muerte: si ibas a morir, quedas con 1 HP
     GamblingDice            // Efecto de dado aleatorio
 }

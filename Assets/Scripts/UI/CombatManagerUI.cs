@@ -634,11 +634,19 @@ private void OnDisable()
             defeatCG.DOFade(1f, 0.6f).SetUpdate(true);
             defeatRT.DOAnchorPosY(dOriginalY, 0.6f).SetEase(Ease.OutCubic).SetUpdate(true);
 
-            defeatMessageText.text = $"DERROTA\n\nPuntuación: {finalScore}";
+            defeatMessageText.text = $"<size=120%>DERROTA</size>\n\nPuntuación: {finalScore}";
 
             if (lifeLost > 0)
             {
-                defeatMessageText.text += $"\n\nPerdiste {lifeLost} vida.";
+                defeatMessageText.text += $"\n\nPerdiste <color=red>{lifeLost}</color> vida.";
+            }
+            else if (lifeLost == -1)
+            {
+                defeatMessageText.text += "\n\n<b><color=green>¡DAÑO DENEGADO POR\nEFECTO DE CARTA!</color></b>";
+            }
+            else if (lifeLost == -2)
+            {
+                defeatMessageText.text += "\n\n<b><color=orange>¡MUERTE DENEGADA POR\nEFECTO DE CARTA!</color></b>\n<size=80%>Tu vida se ha fijado en 1.</size>";
             }
         }
         

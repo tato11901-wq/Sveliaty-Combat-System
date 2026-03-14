@@ -111,6 +111,25 @@ public class PlayerManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Modifica la vida máxima del jugador
+    /// </summary>
+    public void ModifyMaxHealth(int amount)
+    {
+        int oldMax = maxLife;
+        maxLife += amount;
+        if (maxLife < 1) maxLife = 1; // Seguridad
+
+        // Si la vida máxima baja, ajustar vida actual si es necesario
+        if (currentLife > maxLife)
+        {
+            currentLife = maxLife;
+        }
+
+        Debug.Log($"Máximo de vida modificado: {oldMax} -> {maxLife}");
+        OnHealthChanged?.Invoke(currentLife, maxLife);
+    }
+
+    /// <summary>
     /// Establece la vida del jugador directamente
     /// </summary>
     public void SetHealth(int value)

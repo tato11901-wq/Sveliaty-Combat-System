@@ -30,6 +30,18 @@ public class CurseChoiceUI : MonoBehaviour
     
     private Vector2[] cardOriginalPositions;
     private Vector3[] cardOriginalScales;
+
+#if UNITY_EDITOR
+    // ╔══════════════════════════════════════════════════════════════╗
+    // ║  DEBUG REROLL — Mantén R para rerrollear las cartas          ║
+    // ║  SOLO funciona en el Editor. Eliminar esta región completa   ║
+    // ║  antes de la build final.                                    ║
+    // ╚══════════════════════════════════════════════════════════════╝
+    [Header("[DEBUG] Reroll")]
+    [Tooltip("Segundos manteniendo R para rerrollear las cartas (solo Editor)")]
+    public float debugRerollHoldTime = 0.4f;
+    private float debugRerollTimer = 0f;
+#endif
     
     void Start()
     {
@@ -81,6 +93,32 @@ public class CurseChoiceUI : MonoBehaviour
             curseManager.OnCurseChoiceEvent -= ShowChoiceEvent;
         }
     }
+
+#if UNITY_EDITOR
+    void Update()
+    {
+        // ── DEBUG REROLL ─────────────────────────────────────────────
+        // Activo solo cuando el panel de seleccion de cartas esta visible
+        if (threeCardsPanel == null || !threeCardsPanel.activeSelf) return;
+
+        if (Input.GetKey(KeyCode.R))
+        {
+            debugRerollTimer += Time.unscaledDeltaTime;
+            if (debugRerollTimer >= debugRerollHoldTime)
+            {
+                debugRerollTimer = 0f;
+                Debug.Log("[DEBUG] Rerolleando cartas de maldicion...");
+                List<CurseData> newOptions = curseManager.DebugGetNewCurseOptions();
+                ShowChoiceEvent(newOptions);
+            }
+        }
+        else
+        {
+            debugRerollTimer = 0f;
+        }
+        // ── FIN DEBUG REROLL ─────────────────────────────────────────
+    }
+#endif
     
     /// <summary>
     /// FASE 1: Mostrar las 3 cartas volteadas (todas iguales)

@@ -77,7 +77,15 @@ public class CurseManager : MonoBehaviour
 
         Debug.Log($"Maldición obtenida: {curse.curseName}");
 
-        if (curse.activationType == CurseActivationType.Instant)
+        // NegateDamage y NegateDeathBlow son escudos que deben persistir en
+        // activeCurses para ser detectados al final del combate o al morir.
+        // Aunque su activationType sea Instant, NO los consumimos aquí.
+        if (curse.effectType == CurseEffect.NegateDamage ||
+            curse.effectType == CurseEffect.NegateDeathBlow)
+        {
+            activeCurses.Add(new CurseInstance(curse));
+        }
+        else if (curse.activationType == CurseActivationType.Instant)
         {
             executionDetails = ApplyInstantEffect(curse);
         }
@@ -110,6 +118,15 @@ public class CurseManager : MonoBehaviour
                 
                 string lifeColor = curse.effectValue > 0 ? "green" : "red";
                 details = $"\n\n<b><color={lifeColor}>Vida: {oldLife} → {newLife}</color></b>";
+                break;
+
+            case CurseEffect.ModifyMaxHealth:
+                int oldMaxLife = playerManager.MaxLife;
+                playerManager.ModifyMaxHealth(curse.effectValue);
+                int newMaxLife = playerManager.MaxLife;
+                
+                string maxLifeColor = curse.effectValue > 0 ? "green" : "red";
+                details = $"\n\n<b><color={maxLifeColor}>Vida Máxima: {oldMaxLife} → {newMaxLife}</color></b>";
                 break;
 
             case CurseEffect.ModifyCards:
@@ -222,12 +239,25 @@ public class CurseManager : MonoBehaviour
 
     void ReduceDuration(CurseInstance curse)
     {
-        if (curse.remainingDuration > 0)
-        {
-            curse.remainingDuration--;
+        // duration = -1 → permanente (no se reduce)
+        // duration =  0 → un solo uso: se aplica y se elimina de inmediato
+        // duration >  0 → X combates/turnos: se decrementa y se elimina al llegar a 0
+        if (curse.remainingDuration == -1) return;
 
-            if (curse.remainingDuration == 0)
-                activeCurses.Remove(curse);
+        if (curse.remainingDuration == 0)
+        {
+            Debug.Log($"[Curse] Eliminando maldición de un solo uso: {curse.data.curseName}");
+            activeCurses.Remove(curse);
+            return;
+        }
+
+        curse.remainingDuration--;
+        Debug.Log($"[Curse] Reduciendo duración de {curse.data.curseName}. Restante: {curse.remainingDuration}");
+        
+        if (curse.remainingDuration == 0)
+        {
+            Debug.Log($"[Curse] Duración agotada para: {curse.data.curseName}. Eliminando.");
+            activeCurses.Remove(curse);
         }
     }
 
@@ -286,9 +316,22 @@ public class CurseManager : MonoBehaviour
 
     public bool HasDamageNegation()
     {
+        // Basta con que la maldición esté en la lista activa.
+        // isActivated era un requisito incorrecto: nunca se asignaba desde ObtainCurse.
         return activeCurses.Any(c =>
-            c.data.effectType == CurseEffect.NegateDamage &&
-            c.isActivated);
+            c.data.effectType == CurseEffect.NegateDamage);
+    }
+
+    public void ConsumeNegateDamage()
+    {
+        var shield = activeCurses.FirstOrDefault(c =>
+            c.data.effectType == CurseEffect.NegateDamage);
+
+        if (shield != null)
+        {
+            Debug.Log($"[Curse] Escudo consumido: {shield.data.curseName}");
+            activeCurses.Remove(shield);
+        }
     }
 
     public bool HasRewardBlock()
@@ -300,20 +343,25 @@ public class CurseManager : MonoBehaviour
     // ESCUDO DE MUERTE
     // =========================
 
-    public void OnDefeat()
+    public bool CheckAndConsumeDeathNegation()
     {
         var shield = activeCurses.FirstOrDefault(c =>
-            c.data.effectType == CurseEffect.NegateDamage &&
-            c.remainingDuration == -1);
+            c.data.effectType == CurseEffect.NegateDeathBlow);
 
         if (shield != null)
         {
-            Debug.Log("Escudo de derrota usado");
-
+            Debug.Log("[Curse] Escudo de muerte detectado y consumido.");
             activeCurses.Remove(shield);
-
             playerManager.SetHealth(1);
+            return true;
         }
+        return false;
+    }
+
+    public void OnDefeat()
+    {
+        // OnDefeat ahora se usa para otros efectos de post-derrota.
+        // La negacion de muerte se maneja explicitamente en CombatManager solo si el daño es letal.
     }
 
     // =========================
@@ -327,4 +375,22 @@ public class CurseManager : MonoBehaviour
     }
 
     public List<CurseInstance> GetActiveCurses() => activeCurses;
+
+#if UNITY_EDITOR
+    // ╔══════════════════════════════════════════════════════════════╗
+    // ║  DEBUG REROLL — Devuelve 3 nuevas maldiciones aleatorias     ║
+    // ║  Usado por CurseChoiceUI cuando se mantiene R en el Editor.  ║
+    // ║  Eliminar este bloque junto con la lógica en CurseChoiceUI   ║
+    // ║  antes de la build final.                                    ║
+    // ╚══════════════════════════════════════════════════════════════╝
+    public List<CurseData> DebugGetNewCurseOptions()
+    {
+        if (curseDatabase == null)
+        {
+            Debug.LogError("[DEBUG] CurseDatabase no asignada en CurseManager.");
+            return new List<CurseData>();
+        }
+        return curseDatabase.GetThreeRandomCurses();
+    }
+#endif
 }

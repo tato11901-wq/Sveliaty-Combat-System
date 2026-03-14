@@ -987,8 +987,8 @@ MonoBehaviour:
   playerManager: {fileID: 1449721702}
   enemyDatabase: {fileID: 11400000, guid: 9f9d928981baa754d8e451d308d764e3, type: 2}
   defaultMode: 2
-  maxEnemiesPerRun: 2
-  bossStatsMultiplier: 0.1
+  maxEnemiesPerRun: 20
+  bossStatsMultiplier: 3
 --- !u!1 &100254352
 GameObject:
   m_ObjectHideFlags: 0
@@ -2533,7 +2533,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerManager: {fileID: 1449721702}
   curseDatabase: {fileID: 11400000, guid: 74c75f785d056d14da65b3019ecae4a6, type: 2}
-  baseCurseChance: 5
+  baseCurseChance: 15
   curseChancePerTurn: 5
   spiritCurseChance: 100
 --- !u!1 &371798143
@@ -7468,7 +7468,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.021249922, y: 0.042222362}
   m_AnchorMax: {x: 0.09250016, y: 0.09}
-  m_AnchoredPosition: {x: 31, y: -0.49972534}
+  m_AnchoredPosition: {x: 31, y: -0.49969482}
   m_SizeDelta: {x: 6.989868, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &947898687
@@ -9636,6 +9636,7 @@ MonoBehaviour:
   curseDescriptionText: {fileID: 1297979996}
   curseTypeText: {fileID: 0}
   continueButton: {fileID: 1468958391}
+  debugRerollHoldTime: 0.4
 --- !u!114 &1190563947
 MonoBehaviour:
   m_ObjectHideFlags: 0

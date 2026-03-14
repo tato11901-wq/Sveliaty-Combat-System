@@ -18,7 +18,10 @@ MonoBehaviour:
   affinityRelations:
   - type: 0
     multiplier: 3
+  - type: 1
+    multiplier: 0
   enemyTierData:
   - {fileID: 11400000, guid: 01e609600b2f71d40a8126fc2f5bf0ab, type: 2}
   - {fileID: 11400000, guid: 1f29f554b43f93b409939df6ab06e62e, type: 2}
   - {fileID: 11400000, guid: ccebd9f518f01af42b213f39a405c576, type: 2}
+  isSpirit: 0

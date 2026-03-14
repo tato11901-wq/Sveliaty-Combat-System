@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Cura 5
   m_EditorClassIdentifier: 
   id: 5
-  curseName: fsefesfes
-  description: fesfsefes
+  curseName: Regeneracion 5
+  description: Regeneras 5 puntos de vida
   type: 0
   icon: {fileID: 21300000, guid: 6e976b0adc70e964899f1ec02569f707, type: 3}
   activationType: 0

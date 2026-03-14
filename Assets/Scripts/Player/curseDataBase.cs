@@ -19,6 +19,7 @@ public class CurseDatabase : ScriptableObject
         for (int i = 0; i < 3; i++)
         {
             result.Add(GetRandomCurse());
+            Debug.Log("Curse added: " + result[i].curseName);
         }
         return result;
     }

@@ -29,8 +29,8 @@ MonoBehaviour:
   cardMultiplier: 0
   hasSuccessChance: 0
   successChance: 0
-  hasOnKillEffect: 0
-  onKillHealthReward: 0
+  hasOnKillEffect: 1
+  onKillHealthReward: 10
   hasOnFailEffect: 0
   onFailHealthPenalty: 0
   onFailTurnPenalty: 0

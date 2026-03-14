@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb13d52ba97f6624a9acc67f9df3c4e1, type: 3}
-  m_Name: Cura 2
+  m_Name: Fortalezer Enemigo
   m_EditorClassIdentifier: 
-  id: 2
-  curseName: Curacion
-  description: Regeneras 2 puntos de vida
-  type: 0
-  icon: {fileID: 21300000, guid: 6e976b0adc70e964899f1ec02569f707, type: 3}
-  activationType: 0
+  id: 12
+  curseName: Fortalecer enemigo
+  description: "El enemigo se vuelve un poco m\xE1s fuerte"
+  type: 1
+  icon: {fileID: 0}
+  activationType: 1
   requiresPlayerActivation: 0
   mustActivateOnTurnOne: 0
-  effectType: 0
-  effectValue: 2
+  effectType: 3
+  effectValue: 1
   duration: 0
   passiveOnly: 0
   rpgOnly: 0
   affectsVictoryCondition: 0
-  affectsEnemyHealth: 0
-  enemyHealthMultiplier: 0
+  affectsEnemyHealth: 1
+  enemyHealthMultiplier: 3

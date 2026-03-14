@@ -429,25 +429,43 @@ public class CombatManager : MonoBehaviour
             if (hasShield)
             {
                 Debug.Log("Daño negado por maldicion");
-                OnCombatEnd?.Invoke(false, finalScore, default, 0);
+                curseManager.ConsumeNegateDamage();
+                // Usamos -1 para indicar que el daño fue negado
+                OnCombatEnd?.Invoke(false, finalScore, default, -1);
             }
             else
             {
-                playerManager.ModifyHealth(-currentEnemy.failureDamage);
+                int damage = currentEnemy.failureDamage;
                 
-                if (playerManager.IsAlive())
+                // Verificamos si el daño seria letal antes de aplicarlo
+                if (damage >= playerManager.GetCurrentLife())
                 {
-                    OnCombatEnd?.Invoke(false, finalScore, rewardCard, currentEnemy.failureDamage);
+                    // Si el daño es letal, verificamos si hay escudo de muerte
+                    bool deathNegated = curseManager != null && curseManager.CheckAndConsumeDeathNegation();
+
+                    if (deathNegated)
+                    {
+                        // La muerte fue negada. El metodo interno ya seteo la vida a 1.
+                        OnCombatEnd?.Invoke(false, finalScore, default, -2);
+                    }
+                    else
+                    {
+                        // Muerte definitiva
+                        playerManager.ModifyHealth(-damage);
+                        GameOver?.Invoke(
+                            finalScore, 
+                            playerManager.GetCards(AffinityType.Fuerza), 
+                            playerManager.GetCards(AffinityType.Agilidad), 
+                            playerManager.GetCards(AffinityType.Destreza), 
+                            currentEnemy
+                        );
+                    }
                 }
                 else
                 {
-                    GameOver?.Invoke(
-                        finalScore, 
-                        playerManager.GetCards(AffinityType.Fuerza), 
-                        playerManager.GetCards(AffinityType.Agilidad), 
-                        playerManager.GetCards(AffinityType.Destreza), 
-                        currentEnemy
-                    );
+                    // Daño normal (no letal)
+                    playerManager.ModifyHealth(-damage);
+                    OnCombatEnd?.Invoke(false, finalScore, rewardCard, damage);
                 }
             }
             
