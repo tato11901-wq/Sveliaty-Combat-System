@@ -15,6 +15,18 @@ public class EnemyTierData : ScriptableObject
     public int RPGLife; // Vida del enemigo en modo RPG Tradicional
     public int RPGDiceCount; // Cantidad de dados en modo RPG Tradicional
 
+    [Header("Comportamiento en Turno (Pesos/Probabilidades)")]
+    [Tooltip("Peso para curarse vida")]
+    public float healChance = 10f;
+    [Tooltip("Peso para ganar armadura")]
+    public float armorChance = 10f;
+    [Tooltip("Peso para activar espinas")]
+    public float thornsChance = 10f;
+    [Tooltip("Peso para activar evasión por velocidad")]
+    public float speedChance = 10f;
+    [Tooltip("Peso para no hacer nada")]
+    public float doNothingChance = 60f;
+
     public String GetEnemyTier()
     {
         if(enemyTier == EnemyTier.Tier_1)

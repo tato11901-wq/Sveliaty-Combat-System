@@ -120,7 +120,10 @@ public class CombatUIManager : MonoBehaviour
 void Start()
 {
     parentCanvas = GetComponentInParent<Canvas>();
-    attackButton.onClick.AddListener(() => combatManager.PlayerAttempt());
+    attackButton.onClick.AddListener(() => {
+        AffinityType attackType = currentExpandedType.HasValue ? currentExpandedType.Value : AffinityType.Fuerza;
+        combatManager.PlayerAttempt(new BasicAttackAction(attackType));
+    });
 
     fuerzaMainButton.onClick.AddListener(() => ToggleAbilityPanel(AffinityType.Fuerza));
     agilidadMainButton.onClick.AddListener(() => ToggleAbilityPanel(AffinityType.Agilidad));
@@ -384,8 +387,7 @@ void AnimateButton(Button btn)
         if (abilityIndex < abilities.Count)
         {
             AbilityData ability = abilities[abilityIndex];
-            combatManager.SelectAttackType(type);
-            combatManager.PlayerAttempt(ability);
+            combatManager.PlayerAttempt(new AbilityAction(ability));
             UpdateAffinitiesUI();
             UpdateAbilityButtons(type);
         }
@@ -400,6 +402,11 @@ private void OnEnable()
     combatManager.OnCombatEnd += HandleCombatEnd;
     combatManager.OnAttemptsChanged += HandleAttemptsChanged;
     combatManager.OnWaitingForCardSelection += HandleWaitingForCardSelection;
+    
+    // Nuevos eventos del CombatManager refactorizado
+    combatManager.OnTurnStartEvent += HandleTurnStartEvent;
+    combatManager.OnEnemyTurnEvent += HandleEnemyTurnEvent;
+    combatManager.OnHitReceivedEvent += HandleHitReceivedEvent;
 
     passiveEndPanel.SetActive(false);
     playerChoosesVictoryPanel.SetActive(false);
@@ -427,6 +434,10 @@ private void OnDisable()
     combatManager.OnCombatEnd -= HandleCombatEnd;
     combatManager.OnAttemptsChanged -= HandleAttemptsChanged;
     combatManager.OnWaitingForCardSelection -= HandleWaitingForCardSelection;
+    
+    combatManager.OnTurnStartEvent -= HandleTurnStartEvent;
+    combatManager.OnEnemyTurnEvent -= HandleEnemyTurnEvent;
+    combatManager.OnHitReceivedEvent -= HandleHitReceivedEvent;
 }
 
     void OnDestroy()
@@ -438,6 +449,10 @@ private void OnDisable()
             combatManager.OnCombatEnd -= HandleCombatEnd;
             combatManager.OnAttemptsChanged -= HandleAttemptsChanged;
             combatManager.OnWaitingForCardSelection -= HandleWaitingForCardSelection;
+            
+            combatManager.OnTurnStartEvent -= HandleTurnStartEvent;
+            combatManager.OnEnemyTurnEvent -= HandleEnemyTurnEvent;
+            combatManager.OnHitReceivedEvent -= HandleHitReceivedEvent;
         }
     }
 
@@ -486,6 +501,9 @@ private void OnDisable()
         intentosText.text = enemy.attemptsRemaining.ToString();
         dadosText.text = enemy.diceCount.ToString();
 
+        // Mostrar nombre + buffs activos en la UI
+        UpdateEnemyNameWithBuffs();
+
         UpdateModeUI();
         UpdatePlayerLifeUI();
 
@@ -500,6 +518,47 @@ private void OnDisable()
         ShowMainButtons();
         HideBackButton();
         currentExpandedType = null;
+    }
+
+    // ========== EVENTOS DEL NUEVO COMBAT MANAGER ==========
+    
+    void HandleTurnStartEvent(TurnContext context)
+    {
+        UpdateCardsDisplay();
+        if (currentExpandedType.HasValue) UpdateAbilityButtons(currentExpandedType.Value);
+        
+        UpdateEnemyNameWithBuffs();
+    }
+
+    void HandleEnemyTurnEvent()
+    {
+        Debug.Log("CombatManagerUI: El enemigo ha tomado su turno.");
+        UpdateEnemyNameWithBuffs();
+    }
+    
+    void HandleHitReceivedEvent(int damage)
+    {
+        // Shake screen ya existe en OnCombatEnd para derrota final, pero aquí es por perder intento sin morir
+        Camera mainCam = Camera.main;
+        if (mainCam != null)
+        {
+            mainCam.transform.DOComplete();
+            mainCam.transform.DOShakePosition(0.3f, 0.4f, 25, 90f);
+        }
+    }
+
+    void UpdateEnemyNameWithBuffs()
+    {
+        if (combatManager == null || combatManager.GetCurrentEnemy() == null) return;
+        
+        EnemyInstance enemy = combatManager.GetCurrentEnemy();
+        string extraText = "";
+        
+        if (enemy.activeArmor > 0) extraText += $" [Armadura: {enemy.activeArmor}]";
+        if (enemy.activeThorns > 0) extraText += $" [Espinas: {enemy.activeThorns * 100}%]";
+        if (enemy.hasSpeedEvasion) extraText += $" [Velocidad Activa]";
+        
+        enemyNameText.text = enemy.enemyData.displayName + extraText;
     }
 
     string GetEscaladoText(EnemyInstance enemy)

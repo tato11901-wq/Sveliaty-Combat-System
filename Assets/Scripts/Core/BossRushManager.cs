@@ -7,6 +7,13 @@ using System;
 /// - Progresión de tiers: más tier 3 mientras más avanzas
 /// - Enemigo 20 es un boss con stats x3
 /// </summary>
+public enum NodeType
+{
+    Combat,
+    Shop,
+    Boss
+}
+
 public class BossRushManager : MonoBehaviour
 {
     [Header("References")]
@@ -20,6 +27,8 @@ public class BossRushManager : MonoBehaviour
     [Header("Progression Settings")]
     public int maxEnemiesPerRun = 20;
     public float bossStatsMultiplier = 3f;
+    [Tooltip("Cada cuántos combates ganados aparece una tienda")]
+    public int enemiesPerShop = 3; 
     
     [Header("Run Statistics")]
     private int enemiesDefeatedThisRun = 0;
@@ -30,6 +39,7 @@ public class BossRushManager : MonoBehaviour
     public event Action<CombatMode> OnRunStarted;
     public event Action<int, int> OnRunEnded; // (finalScore, enemiesDefeated)
     public event Action<int, int> OnProgressionUpdate; // (current, max) para UI
+    public event Action OnShopReached; // Evento nuevo para la Tienda
 
     void Start()
     {
@@ -74,6 +84,32 @@ public class BossRushManager : MonoBehaviour
         StartNextCombat();
     }
 
+    public NodeType GetNodeType(int targetEnemyIndex)
+    {
+        if (targetEnemyIndex >= maxEnemiesPerRun - 1) return NodeType.Boss;
+        
+        // Si el jugador ha derrotado a la cantidad necesaria de enemigos para la tienda
+        // Ejemplo: Si enemiesPerShop es 3, los nodos serán: 0(C), 1(C), 2(C), 3(S), 4(C), 5(C), 6(C), 7(S)...
+        // Es decir, si el índice cae justo en el múltiplo (targetEnemyIndex % 4 == 3)
+        if ((targetEnemyIndex + 1) % (enemiesPerShop + 1) == 0)
+        {
+            return NodeType.Shop;
+        }
+        return NodeType.Combat;
+    }
+
+    public List<NodeType> GetUpcomingNodes(int count)
+    {
+        List<NodeType> nodes = new List<NodeType>();
+        for (int i = 0; i < count; i++)
+        {
+            int checkIndex = enemiesDefeatedThisRun + i;
+            if (checkIndex >= maxEnemiesPerRun) break;
+            nodes.Add(GetNodeType(checkIndex));
+        }
+        return nodes;
+    }
+
     public void StartNextCombat()
     {
         if (!runInProgress)
@@ -82,14 +118,22 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
+        NodeType nextNode = GetNodeType(enemiesDefeatedThisRun);
+
+        if (nextNode == NodeType.Shop)
+        {
+            Debug.Log("¡TIENDA ENCONTRADA! Nodo: " + (enemiesDefeatedThisRun + 1));
+            OnShopReached?.Invoke();
+            return; // Detenemos el flujo aquí hasta que el jugador salga de la tienda
+        }
+
         if (enemyDatabase == null)
         {
             Debug.LogError("EnemyDatabase no asignado en BossRushManager");
             return;
         }
 
-        // Verificar si es el enemigo final (boss)
-        bool isFinalBoss = (enemiesDefeatedThisRun + 1) >= maxEnemiesPerRun;
+        bool isFinalBoss = (nextNode == NodeType.Boss);
         
         EnemyData enemyData;
         EnemyTier tier;
