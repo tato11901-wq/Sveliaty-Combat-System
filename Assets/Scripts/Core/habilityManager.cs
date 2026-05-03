@@ -8,8 +8,8 @@ public class AbilityManager : MonoBehaviour
     public AbilityDatabase abilityDatabase;
     public PlayerManager playerManager;
     
-    // Habilidades desbloqueadas
-    private HashSet<int> unlockedAbilityIds = new HashSet<int>();
+    // Habilidades desbloqueadas y sus Tiers (id -> tier actual, 0 = no poseída)
+    private Dictionary<int, int> abilityTiers = new Dictionary<int, int>();
     
     // Sistema de gasto de cartas (configurable)
     public enum CardSpendingMode 
@@ -31,13 +31,13 @@ public class AbilityManager : MonoBehaviour
     
     void InitializeAbilities()
     {
-        // Desbloquear habilidades basicas
+        abilityTiers.Clear();
+
+        // Desbloquear habilidades básicas en Tier 1
         foreach (var ability in abilityDatabase.allAbilities)
         {
             if (ability.isBasicAbility)
-            {
-                unlockedAbilityIds.Add(ability.id);
-            }
+                abilityTiers[ability.id] = 1;
         }
         
         // Inicializar tracking
@@ -51,7 +51,7 @@ public class AbilityManager : MonoBehaviour
     public List<AbilityData> GetAvailableAbilities(AffinityType type)
     {
         return abilityDatabase.GetAbilitiesByAffinity(type)
-            .Where(a => unlockedAbilityIds.Contains(a.id))
+            .Where(a => abilityTiers.ContainsKey(a.id) && abilityTiers[a.id] > 0)
             .ToList();
     }
     
@@ -96,27 +96,51 @@ public class AbilityManager : MonoBehaviour
     
     public void CheckUnlocks()
     {
-        foreach (var ability in abilityDatabase.allAbilities)
+        // Las habilidades ahora se desbloquean solo desde la tienda.
+        // Este método se mantiene por retrocompatibilidad pero no hace nada.
+    }
+
+    // ── Métodos para la tienda ─────────────────────────────────────────────
+
+    /// <summary>
+    /// Desbloquea una habilidad nueva (Tier 1) o sube su Tier si ya está poseída.
+    /// Llamado por ShopManager tras confirmar la compra.
+    /// </summary>
+    public void UnlockOrUpgradeAbility(AbilityData ability)
+    {
+        if (!abilityTiers.ContainsKey(ability.id) || abilityTiers[ability.id] == 0)
         {
-            if (ability.isBasicAbility) continue;
-            if (unlockedAbilityIds.Contains(ability.id)) continue;
-            
-            // Verificar si cumple requisito de desbloqueo
-            int currentCards = spendingMode == CardSpendingMode.Relative 
-                ? maxCardsEverHad[ability.affinityType]
-                : playerManager.GetCards(ability.affinityType);
-            
-            if (currentCards >= ability.unlockRequirement)
-            {
-                UnlockAbility(ability.id);
-            }
+            abilityTiers[ability.id] = 1;
+            Debug.Log($"Habilidad desbloqueada: {ability.abilityName} (Tier 1)");
+        }
+        else if (abilityTiers[ability.id] < 3)
+        {
+            abilityTiers[ability.id]++;
+            Debug.Log($"Habilidad mejorada: {ability.abilityName} → Tier {abilityTiers[ability.id]}");
+        }
+        else
+        {
+            Debug.LogWarning($"{ability.abilityName} ya está en Tier máximo.");
         }
     }
-    
-    void UnlockAbility(int abilityId)
+
+    /// <summary>Devuelve el Tier actual de la habilidad (0 = no poseída).</summary>
+    public int GetAbilityTier(AbilityData ability)
     {
-        unlockedAbilityIds.Add(abilityId);
-        Debug.Log("Habilidad desbloqueada: " + abilityDatabase.GetAbilityById(abilityId).abilityName);
+        if (ability == null) return 0;
+        return abilityTiers.TryGetValue(ability.id, out int tier) ? tier : 0;
+    }
+
+    /// <summary>Cantidad de habilidades no-básicas poseídas en la rama (para límite GDD).</summary>
+    public int GetAbilityCountInBranch(AffinityType branch)
+    {
+        int count = 0;
+        foreach (var ability in abilityDatabase.GetAbilitiesByAffinity(branch))
+        {
+            if (!ability.isBasicAbility && abilityTiers.TryGetValue(ability.id, out int t) && t > 0)
+                count++;
+        }
+        return count;
     }
     
     void UpdateMaxCards()

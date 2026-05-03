@@ -23,6 +23,14 @@ namespace Sveliaty.UI.V2
         public Transform attemptsContainer;
         public GameObject attemptTokenPrefab;
 
+        [Header("Card Stats Visuals")]
+        public TextMeshProUGUI fuerzaCardsText;
+        public TextMeshProUGUI agilidadCardsText;
+        public TextMeshProUGUI destrezaCardsText;
+
+        [Header("Ink Visuals")]
+        public TextMeshProUGUI inkText;
+
         // Cache
         private List<GameObject> activeHearts = new List<GameObject>();
         private List<GameObject> activeTokens = new List<GameObject>();
@@ -67,6 +75,18 @@ namespace Sveliaty.UI.V2
                 GameObject token = Instantiate(attemptTokenPrefab, attemptsContainer);
                 activeTokens.Add(token);
             }
+        }
+
+        public void UpdateCardStats(int fuerza, int agilidad, int destreza)
+        {
+            if (fuerzaCardsText != null) fuerzaCardsText.text = fuerza.ToString();
+            if (agilidadCardsText != null) agilidadCardsText.text = agilidad.ToString();
+            if (destrezaCardsText != null) destrezaCardsText.text = destreza.ToString();
+        }
+
+        public void UpdateInk(int ink)
+        {
+            if (inkText != null) inkText.text = ink.ToString();
         }
 
         public void PlayDamageAnimation()

@@ -54,6 +54,12 @@ namespace Sveliaty.UI.V2
                 bossRushManager.OnProgressionUpdate += HandleProgressionUpdate;
             }
 
+            if (playerManager != null)
+            {
+                playerManager.OnCardsChanged += HandleCardsChanged;
+                playerManager.OnInkChanged   += HandleInkChanged;
+            }
+
             victoryScreen?.SetActive(false);
             defeatScreen?.SetActive(false);
 
@@ -92,6 +98,12 @@ namespace Sveliaty.UI.V2
             {
                 bossRushManager.OnProgressionUpdate -= HandleProgressionUpdate;
             }
+
+            if (playerManager != null)
+            {
+                playerManager.OnCardsChanged -= HandleCardsChanged;
+                playerManager.OnInkChanged   -= HandleInkChanged;
+            }
         }
 
         private void HandleCombatStart(EnemyInstance enemy)
@@ -104,6 +116,8 @@ namespace Sveliaty.UI.V2
             bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife());
             bottomStatsUI?.UpdateAttempts(enemy.attemptsRemaining);
             cardInteractionUI?.UpdateDeckCounts(playerManager);
+            UpdateBottomCardStats();
+            bottomStatsUI?.UpdateInk(playerManager.GetInk());
             enemyVisualsUI?.SetupEnemy(enemy);
             combatLogUI?.LogCombatStart(enemy.enemyData.displayName);
             
@@ -248,7 +262,7 @@ namespace Sveliaty.UI.V2
 
             // Limpiar run en progreso antes de salir
             bossRushManager?.ForceEndRun();
-            UnityEngine.SceneManagement.SceneManager.LoadScene("StartScene");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Main Menu");
         }
 
         private void UpdateTopBarEnemyInfo()
@@ -269,6 +283,28 @@ namespace Sveliaty.UI.V2
             if (bottomStatsUI != null && currentEnemy != null)
             {
                 bottomStatsUI.UpdateEnemyHealth(currentEnemy.currentRPGHealth, currentEnemy.enemyTierData.RPGLife);
+            }
+        }
+
+        private void HandleCardsChanged(AffinityType type, int amount)
+        {
+            UpdateBottomCardStats();
+        }
+
+        private void HandleInkChanged(int newInk)
+        {
+            bottomStatsUI?.UpdateInk(newInk);
+        }
+
+        private void UpdateBottomCardStats()
+        {
+            if (bottomStatsUI != null && playerManager != null)
+            {
+                bottomStatsUI.UpdateCardStats(
+                    playerManager.GetCards(AffinityType.Fuerza),
+                    playerManager.GetCards(AffinityType.Agilidad),
+                    playerManager.GetCards(AffinityType.Destreza)
+                );
             }
         }
     }

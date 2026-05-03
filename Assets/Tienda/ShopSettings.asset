@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 355a8a325b0aadb44aa8fa49d348a8f6, type: 3}
+  m_Name: ShopSettings
+  m_EditorClassIdentifier: 
+  slotCount: 3
+  abilitySlotChance: 0.33
+  inkPriceScalePerVisit: 8
+  abilityBaseCostTier1: 3
+  abilityBaseCostTier2: 5
+  abilityBaseCostTier3: 8
+  abilityCardCostScalePerVisit: 1
+  rerollBaseInkCost: 5
+  rerollCostIncrement: 5
+  maxAbilitiesPerBranch: 2

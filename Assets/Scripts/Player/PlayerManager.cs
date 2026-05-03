@@ -25,6 +25,9 @@ public class PlayerManager : MonoBehaviour
     [Header("Puntuacion")]
     [SerializeField] private int score = 0;
 
+    [Header("Tinta (recurso económico)")]
+    [SerializeField] private int inkAmount = 0;
+
     [Header("Estadisticas")]
     [SerializeField] private int enemiesDefeated = 0;
     [SerializeField] private int combatsWon = 0;
@@ -34,6 +37,7 @@ public class PlayerManager : MonoBehaviour
     public event Action<int, int> OnHealthChanged; // (currentLife, maxLife)
     public event Action<AffinityType, int> OnCardsChanged; // (type, newAmount)
     public event Action<int> OnScoreChanged; // (newScore)
+    public event Action<int> OnInkChanged;   // (newInkAmount)
     public event Action OnPlayerDeath;
 
     void Awake()
@@ -73,6 +77,9 @@ public class PlayerManager : MonoBehaviour
         // Resetear puntuacion
         score = 0;
 
+        // Resetear tinta
+        inkAmount = 0;
+
         // Resetear estadisticas
         enemiesDefeated = 0;
         combatsWon = 0;
@@ -81,6 +88,7 @@ public class PlayerManager : MonoBehaviour
         // Notificar cambios
         OnHealthChanged?.Invoke(currentLife, maxLife);
         OnScoreChanged?.Invoke(score);
+        OnInkChanged?.Invoke(inkAmount);
 
         Debug.Log("PlayerManager inicializado - Vida: " + currentLife + "/" + maxLife);
     }
@@ -308,6 +316,22 @@ public class PlayerManager : MonoBehaviour
     public int GetEnemiesDefeated() => enemiesDefeated;
     public int GetCombatsWon() => combatsWon;
     public int GetCombatsLost() => combatsLost;
+    public int GetInk() => inkAmount;
+
+    public void AddInk(int amount)
+    {
+        if (amount <= 0) return;
+        inkAmount += amount;
+        Debug.Log($"+{amount} Tinta. Total: {inkAmount}");
+        OnInkChanged?.Invoke(inkAmount);
+    }
+
+    public void SpendInk(int amount)
+    {
+        inkAmount = Mathf.Max(0, inkAmount - amount);
+        Debug.Log($"-{amount} Tinta. Total: {inkAmount}");
+        OnInkChanged?.Invoke(inkAmount);
+    }
 
     public bool IsAlive() => currentLife > 0;
 
