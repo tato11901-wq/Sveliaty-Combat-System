@@ -1,3 +1,6 @@
+using System;
+
+[Serializable]
 public class CurseInstance
 {
     public CurseData data;

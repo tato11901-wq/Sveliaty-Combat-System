@@ -9,16 +9,13 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Referencias de Paneles")]
-    public GameObject startMenuPanel;
     public GameObject gameplayPanel; // Panel que contiene toda la UI de juego
     public GameObject gameOverPanel;
-    public GameObject characterGeneratorPanel;
-    public GameObject matchHistoryPanel;
 
     [Header("Referencias de Managers")]
-    public BossRushManager bossRushManager; // NUEVO: Ahora usa BossRushManager
+    public BossRushManager bossRushManager;
     public CombatManager combatManager;
-    public StartMenuUI startMenuUI;
+    public RunSaveManager runSaveManager;
     public GameOverUI gameOverUI;
 
     [Header("Estado del Juego")]
@@ -51,7 +48,34 @@ public class GameManager : MonoBehaviour
             bossRushManager.OnRunEnded += HandleRunEnded;
         }
 
-        ShowStartMenu();
+        // Iniciar flujo según GlobalData
+        if (Sveliaty.Core.GlobalData.ShouldLoadSave)
+        {
+            Debug.Log("GameManager: Restaurando partida guardada...");
+            if (runSaveManager != null)
+            {
+                runSaveManager.LoadSavedRun();
+            }
+            else
+            {
+                Debug.LogError("RunSaveManager no asignado en GameManager");
+            }
+        }
+        else
+        {
+            Debug.Log("GameManager: Iniciando nueva partida...");
+            if (bossRushManager != null)
+            {
+                bossRushManager.StartNewRun();
+            }
+            else
+            {
+                Debug.LogError("BossRushManager no asignado en GameManager");
+            }
+        }
+        
+        if (gameplayPanel != null) gameplayPanel.SetActive(true);
+        if (gameOverPanel != null) gameOverPanel.SetActive(false);
     }
 
     void OnDestroy()
@@ -68,48 +92,10 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void ShowStartMenu()
-    {
-        Debug.Log("Mostrando menu de inicio");
-        
-        startMenuPanel.SetActive(true);
-        gameplayPanel.SetActive(false);
-        gameOverPanel.SetActive(false);
-        if (characterGeneratorPanel != null) characterGeneratorPanel.SetActive(false);
-        if (matchHistoryPanel != null) matchHistoryPanel.SetActive(false);
-        
-        gameInProgress = false;
-    }
-
-    /// <summary>
-    /// Inicia una nueva run (ahora delega a BossRushManager)
-    /// </summary>
-    public void StartNewRun(CombatMode mode)
-    {
-        Debug.Log("GameManager: Iniciando nueva run en modo " + mode);
-        
-        gameInProgress = true;
-
-        startMenuPanel.SetActive(false);
-        gameplayPanel.SetActive(true);
-        gameOverPanel.SetActive(false);
-        if (characterGeneratorPanel != null) characterGeneratorPanel.SetActive(false);
-        if (matchHistoryPanel != null) matchHistoryPanel.SetActive(false);
-
-        // NUEVO: Delegar a BossRushManager
-        if (bossRushManager != null)
-        {
-            bossRushManager.StartNewRun(mode);
-        }
-        else
-        {
-            Debug.LogError("BossRushManager no asignado");
-        }
-    }
 
     void HandleRunStarted(CombatMode mode)
     {
-        Debug.Log("Run iniciada en modo " + mode);
+        Debug.Log("Run iniciada");
     }
 
     void HandleRunEnded(int finalScore, int enemiesDefeated)
@@ -165,8 +151,8 @@ public class GameManager : MonoBehaviour
 
     public void RestartGame()
     {
-        Debug.Log("Reiniciando juego");
-        ShowStartMenu();
+        Debug.Log("Reiniciando juego...");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("StartScene"); // Asumiendo que así se llama
     }
 
     // GETTERS

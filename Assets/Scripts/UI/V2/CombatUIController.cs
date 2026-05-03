@@ -21,24 +21,32 @@ namespace Sveliaty.UI.V2
         public TopBarUI topBarUI;
         public BottomStatsUI bottomStatsUI;
         public CardInteractionUI cardInteractionUI;
+        public EnemyVisualsUI enemyVisualsUI;
+        public CombatLogUI combatLogUI;
+        public CurseChoiceUIV2 curseChoiceUI;
+        public RewardChoiceUIV2 rewardChoiceUI;
 
-        [Header("Screens")]
         public GameObject victoryScreen;
         public GameObject defeatScreen;
         public TextMeshProUGUI resultsText;
+        public TextMeshProUGUI defeatMessageText;
+
+        private bool currentRunIsGameOver = false;
 
         private void OnEnable()
         {
             if (combatManager == null) return;
 
             // Suscripciones al motor de combate
-            combatManager.OnCombatStart += HandleCombatStart;
-            combatManager.OnTurnStartEvent += HandleTurnStart;
-            combatManager.OnEnemyTurnEvent += HandleEnemyTurn;
-            combatManager.OnHitReceivedEvent += HandleHitReceived;
-            combatManager.OnAttackResult += HandleAttackResult;
-            combatManager.OnCombatEnd += HandleCombatEnd;
-            combatManager.OnAttemptsChanged += HandleAttemptsChanged;
+            combatManager.OnCombatStart      += HandleCombatStart;
+            combatManager.OnTurnStartEvent    += HandleTurnStart;
+            combatManager.OnEnemyTurnEvent    += HandleEnemyTurn;
+            combatManager.OnEnemyActionEvent  += HandleEnemyAction;
+            combatManager.OnHitReceivedEvent  += HandleHitReceived;
+            combatManager.OnAttackResult      += HandleAttackResult;
+            combatManager.OnCombatEnd         += HandleCombatEnd;
+            combatManager.OnAttemptsChanged   += HandleAttemptsChanged;
+            combatManager.GameOver            += HandleGameOver;
             
             // Suscripciones a la progresión
             if (bossRushManager != null)
@@ -48,19 +56,37 @@ namespace Sveliaty.UI.V2
 
             victoryScreen?.SetActive(false);
             defeatScreen?.SetActive(false);
+
+            // Asegurar que el panel de maldiciones y recompensas estén activos para que se suscriban a los eventos
+            if (curseChoiceUI != null && !curseChoiceUI.gameObject.activeSelf)
+            {
+                curseChoiceUI.gameObject.SetActive(true);
+            }
+            if (rewardChoiceUI != null && !rewardChoiceUI.gameObject.activeSelf)
+            {
+                rewardChoiceUI.gameObject.SetActive(true);
+            }
+
+            // IMPORTANTE: Si ya hay un combate activo (ej: al reiniciar escena), forzar inicialización
+            if (combatManager.HasActiveEnemy())
+            {
+                HandleCombatStart(combatManager.GetCurrentEnemy());
+            }
         }
 
         private void OnDisable()
         {
             if (combatManager == null) return;
 
-            combatManager.OnCombatStart -= HandleCombatStart;
-            combatManager.OnTurnStartEvent -= HandleTurnStart;
-            combatManager.OnEnemyTurnEvent -= HandleEnemyTurn;
-            combatManager.OnHitReceivedEvent -= HandleHitReceived;
-            combatManager.OnAttackResult -= HandleAttackResult;
-            combatManager.OnCombatEnd -= HandleCombatEnd;
-            combatManager.OnAttemptsChanged -= HandleAttemptsChanged;
+            combatManager.OnCombatStart      -= HandleCombatStart;
+            combatManager.OnTurnStartEvent    -= HandleTurnStart;
+            combatManager.OnEnemyTurnEvent    -= HandleEnemyTurn;
+            combatManager.OnEnemyActionEvent  -= HandleEnemyAction;
+            combatManager.OnHitReceivedEvent  -= HandleHitReceived;
+            combatManager.OnAttackResult      -= HandleAttackResult;
+            combatManager.OnCombatEnd         -= HandleCombatEnd;
+            combatManager.OnAttemptsChanged   -= HandleAttemptsChanged;
+            combatManager.GameOver            -= HandleGameOver;
 
             if (bossRushManager != null)
             {
@@ -70,13 +96,16 @@ namespace Sveliaty.UI.V2
 
         private void HandleCombatStart(EnemyInstance enemy)
         {
+            currentRunIsGameOver = false;
             victoryScreen?.SetActive(false);
             defeatScreen?.SetActive(false);
 
-            topBarUI?.UpdateEnemyInfo(enemy);
+            UpdateTopBarEnemyInfo();
             bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife());
             bottomStatsUI?.UpdateAttempts(enemy.attemptsRemaining);
             cardInteractionUI?.UpdateDeckCounts(playerManager);
+            enemyVisualsUI?.SetupEnemy(enemy);
+            combatLogUI?.LogCombatStart(enemy.enemyData.displayName);
             
             // Forzar actualización inicial de la línea de tiempo
             if (bossRushManager != null)
@@ -89,25 +118,36 @@ namespace Sveliaty.UI.V2
         {
             // El jugador recupera el control, actualizamos los mazos
             cardInteractionUI?.UpdateDeckCounts(playerManager);
-            topBarUI?.UpdateEnemyInfo(combatManager.GetCurrentEnemy());
+            UpdateTopBarEnemyInfo();
         }
 
         private void HandleEnemyTurn()
         {
-            // El enemigo actuó (ej. se puso armadura)
-            topBarUI?.UpdateEnemyInfo(combatManager.GetCurrentEnemy());
+            // La acción específica llegará por HandleEnemyAction
+            UpdateTopBarEnemyInfo();
+        }
+
+        private void HandleEnemyAction(string actionDescription)
+        {
+            string enemyName = combatManager.GetCurrentEnemy()?.enemyData.displayName ?? "Enemigo";
+            combatLogUI?.LogEnemyAction($"{enemyName}: {actionDescription}");
         }
 
         private void HandleHitReceived(int damage)
         {
+            combatLogUI?.LogDamageReceived(damage);
             bottomStatsUI?.PlayDamageAnimation();
             bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife());
         }
 
         private void HandleAttackResult(int roll, int bonus, int total, float multiplier)
         {
-            // Actualizar vida del enemigo o mostrar textos de daño flotante aquí
-            topBarUI?.UpdateEnemyInfo(combatManager.GetCurrentEnemy());
+            enemyVisualsUI?.PlayDamageAnimation();
+            combatLogUI?.LogAttackResult(
+                combatManager.GetCurrentEnemy()?.enemyData.displayName ?? "Enemigo",
+                roll, bonus, total, multiplier
+            );
+            UpdateTopBarEnemyInfo();
         }
 
         private void HandleAttemptsChanged(int attemptsRemaining)
@@ -119,16 +159,54 @@ namespace Sveliaty.UI.V2
         {
             if (victory)
             {
+                combatLogUI?.LogCombatResult(true, finalScore);
+                enemyVisualsUI?.PlayDeathAnimation();
                 victoryScreen?.SetActive(true);
-                if (resultsText != null) resultsText.text = $"Puntuación: {finalScore}\nObtuviste: {rewardCard}";
+                if (resultsText != null)
+                    resultsText.text = $"Puntuación: {finalScore}\nObtuviste: {rewardCard}";
             }
             else
             {
+                combatLogUI?.LogCombatResult(false, finalScore);
                 defeatScreen?.SetActive(true);
-                bottomStatsUI?.PlayDamageAnimation(); // Shake the screen/hearts on death
+                bottomStatsUI?.PlayDamageAnimation();
+
+                if (defeatMessageText != null)
+                {
+                    string msg = $"<size=120%>DERROTA</size>\n\nPuntuación: {finalScore}";
+
+                    if (lifeLost > 0)
+                        msg += $"\n\nPerdiste <color=red>{lifeLost}</color> de vida.";
+                    else if (lifeLost == -1)
+                        msg += "\n\n<b><color=green>\u00a1DAÑO DENEGADO POR\nEFECTO DE CARTA!</color></b>";
+                    else if (lifeLost == -2)
+                        msg += "\n\n<b><color=orange>\u00a1MUERTE DENEGADA POR\nEFECTO DE CARTA!</color></b>\n<size=80%>Tu vida se ha fijado en 1.</size>";
+
+                    defeatMessageText.text = msg;
+                }
             }
-            
+
             cardInteractionUI?.HideAllCards();
+        }
+
+        private void HandleGameOver(int finalScore, int fuerzaCards, int agilidadCards, int destrezaCards, EnemyInstance defeatedBy)
+        {
+            currentRunIsGameOver = true;
+            combatLogUI?.Log($"\u00a1GAME OVER! Derrotado por {defeatedBy?.enemyData.displayName ?? "el enemigo"}");
+            defeatScreen?.SetActive(true);
+            bottomStatsUI?.PlayDamageAnimation();
+            cardInteractionUI?.HideAllCards();
+
+            if (defeatMessageText != null)
+            {
+                defeatMessageText.text =
+                    $"<size=120%>GAME OVER</size>\n\n" +
+                    $"Puntuación final: {finalScore}\n\n" +
+                    $"Cartas:\n" +
+                    $"<color=#FF6B6B>Fuerza: {fuerzaCards}</color>  " +
+                    $"<color=#6BCB77>Agilidad: {agilidadCards}</color>  " +
+                    $"<color=#74B3CE>Destreza: {destrezaCards}</color>";
+            }
         }
 
         private void HandleProgressionUpdate(int current, int max)
@@ -139,11 +217,59 @@ namespace Sveliaty.UI.V2
             }
         }
 
-        // Métodos públicos para la navegación post-combate
+        // ==========================================
+        // NAVEGACIÓN POST-COMBATE
+        // ==========================================
+
         public void ContinueRun()
         {
             victoryScreen?.SetActive(false);
-            bossRushManager?.ContinueToNextCombat();
+            defeatScreen?.SetActive(false);
+
+            // Verificar si hay evento de maldición antes de seguir
+            if (combatManager != null && combatManager.ShouldShowCurseEvent())
+            {
+                // Ir directo a la elección de maldición
+                combatManager.TriggerCurseEventFromUI();
+            }
+            else
+            {
+                bossRushManager?.ContinueToNextCombat();
+            }
+        }
+
+        public void GoToMainMenu()
+        {
+            if (!currentRunIsGameOver && defeatScreen != null && defeatScreen.activeSelf)
+            {
+                ContinueRun();
+                return;
+            }
+
+            // Limpiar run en progreso antes de salir
+            bossRushManager?.ForceEndRun();
+            UnityEngine.SceneManagement.SceneManager.LoadScene("StartScene");
+        }
+
+        private void UpdateTopBarEnemyInfo()
+        {
+            if (combatManager == null || bossRushManager == null) return;
+            
+            var currentEnemy = combatManager.GetCurrentEnemy();
+
+            if (topBarUI != null)
+            {
+                topBarUI.UpdateEnemyInfo(
+                    currentEnemy,
+                    bossRushManager.GetCurrentNodeIndex(),
+                    bossRushManager.GetMaxEnemies()
+                );
+            }
+
+            if (bottomStatsUI != null && currentEnemy != null)
+            {
+                bottomStatsUI.UpdateEnemyHealth(currentEnemy.currentRPGHealth, currentEnemy.enemyTierData.RPGLife);
+            }
         }
     }
 }

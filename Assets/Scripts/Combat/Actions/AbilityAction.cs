@@ -16,7 +16,7 @@ public class AbilityAction : CombatAction
     public override AffinityType ActionAffinity => data.affinityType;
     public override int CardCost => data.cardCost;
     public override int HealthCost => data.healthCost;
-    public override int TurnCost => data.turnCost;
+    public override int TurnCost => data.turnCost > 0 ? data.turnCost : 1;
 
     public override bool Execute(CombatManager manager, TurnContext context)
     {

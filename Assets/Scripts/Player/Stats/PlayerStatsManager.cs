@@ -14,7 +14,8 @@ public class PlayerStatsManager : MonoBehaviour
     // Diccionario para acceder rápidamente a la clase CharacterStat de cada StatType
     private Dictionary<StatType, CharacterStat> stats;
 
-    private PlayerData _playerDataRef;
+    [Header("Debug Inspector")]
+    [SerializeField] private PlayerData _playerDataRef;
 
     private void Awake()
     {

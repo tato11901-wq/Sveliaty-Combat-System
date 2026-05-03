@@ -8,7 +8,7 @@ namespace Sveliaty.UI.V2
     {
         [Header("Enemy Info")]
         public TextMeshProUGUI enemyNameText;
-        public TextMeshProUGUI magicArmorText;
+        public TextMeshProUGUI runProgressText;
         
         [Header("Timeline Visuals")]
         public Transform timelineContainer;
@@ -19,21 +19,16 @@ namespace Sveliaty.UI.V2
         // Cache visual para limpiar
         private List<GameObject> activeNodes = new List<GameObject>();
 
-        public void UpdateEnemyInfo(EnemyInstance enemy)
+        public void UpdateEnemyInfo(EnemyInstance enemy, int currentNodeIndex, int maxNodes)
         {
             if (enemy == null) return;
 
             if (enemyNameText != null)
                 enemyNameText.text = enemy.enemyData.displayName;
 
-            if (magicArmorText != null)
+            if (runProgressText != null)
             {
-                string buffs = "";
-                if (enemy.activeArmor > 0) buffs += $"ARMADURA: {enemy.activeArmor} ";
-                if (enemy.activeThorns > 0) buffs += $"ESPINAS: {enemy.activeThorns * 100}% ";
-                if (enemy.hasSpeedEvasion) buffs += "EVASIÓN ";
-
-                magicArmorText.text = buffs;
+                runProgressText.text = $"Enemigo {currentNodeIndex + 1} / {maxNodes}";
             }
         }
 

@@ -23,18 +23,20 @@ public class BossRushManager : MonoBehaviour
     public EnemyDatabase enemyDatabase;
 
     [Header("Boss Rush Settings")]
-    public CombatMode defaultMode = CombatMode.PlayerChooses;
+    public CombatMode defaultMode = CombatMode.TraditionalRPG;
     
     [Header("Progression Settings")]
     public int maxEnemiesPerRun = 20;
     public float bossStatsMultiplier = 3f;
-    [Tooltip("Cada cuántos combates ganados aparece una tienda")]
+    [Tooltip("Cada cuántos combates (nodos) aparece una tienda")]
     public int enemiesPerShop = 3; 
+    [Tooltip("Cada cuántos combates (nodos) aparece un Boss (Final de zona)")]
+    public int enemiesPerBoss = 5; 
     
-    [Header("Run Statistics")]
-    private int enemiesDefeatedThisRun = 0;
-    private int totalTurnsUsed = 0;
-    private bool runInProgress = false;
+    [Header("Run Statistics (Debug)")]
+    [SerializeField] private int currentNodeIndex = 0;
+    [SerializeField] private int totalTurnsUsed = 0;
+    [SerializeField] private bool runInProgress = false;
     
     // Eventos
     public event Action<CombatMode> OnRunStarted;
@@ -60,14 +62,14 @@ public class BossRushManager : MonoBehaviour
         }
     }
 
-    public void StartNewRun(CombatMode mode)
+    public void StartNewRun()
     {
-        Debug.Log("BossRushManager: Iniciando nueva run en modo " + mode);
+        Debug.Log("BossRushManager: Iniciando nueva run");
         
         runInProgress = true;
-        defaultMode = mode;
+        defaultMode = CombatMode.TraditionalRPG;
         
-        enemiesDefeatedThisRun = 0;
+        currentNodeIndex = 0;
         totalTurnsUsed = 0;
         
         if (playerManager != null)
@@ -79,7 +81,7 @@ public class BossRushManager : MonoBehaviour
             Debug.LogError("PlayerManager no asignado en BossRushManager");
         }
         
-        OnRunStarted?.Invoke(mode);
+        OnRunStarted?.Invoke(defaultMode);
         OnProgressionUpdate?.Invoke(0, maxEnemiesPerRun);
         
         StartNextCombat();
@@ -87,15 +89,21 @@ public class BossRushManager : MonoBehaviour
 
     public NodeType GetNodeType(int targetEnemyIndex)
     {
+        // Boss final siempre garantiza un jefe al final de la run
         if (targetEnemyIndex >= maxEnemiesPerRun - 1) return NodeType.Boss;
         
-        // Si el jugador ha derrotado a la cantidad necesaria de enemigos para la tienda
-        // Ejemplo: Si enemiesPerShop es 3, los nodos serán: 0(C), 1(C), 2(C), 3(S), 4(C), 5(C), 6(C), 7(S)...
-        // Es decir, si el índice cae justo en el múltiplo (targetEnemyIndex % 4 == 3)
-        if ((targetEnemyIndex + 1) % (enemiesPerShop + 1) == 0)
+        // Bosses intermedios (ej: cada 5 enemigos)
+        if (enemiesPerBoss > 0 && (targetEnemyIndex + 1) % enemiesPerBoss == 0)
+        {
+            return NodeType.Boss;
+        }
+
+        // Tiendas (ej: cada 3 enemigos. Si coincide con boss, tiene prioridad el boss)
+        if (enemiesPerShop > 0 && (targetEnemyIndex + 1) % (enemiesPerShop + 1) == 0)
         {
             return NodeType.Shop;
         }
+
         return NodeType.Combat;
     }
 
@@ -104,7 +112,7 @@ public class BossRushManager : MonoBehaviour
         List<NodeType> nodes = new List<NodeType>();
         for (int i = 0; i < count; i++)
         {
-            int checkIndex = enemiesDefeatedThisRun + i;
+            int checkIndex = currentNodeIndex + i;
             if (checkIndex >= maxEnemiesPerRun) break;
             nodes.Add(GetNodeType(checkIndex));
         }
@@ -119,11 +127,11 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
-        NodeType nextNode = GetNodeType(enemiesDefeatedThisRun);
+        NodeType nextNode = GetNodeType(currentNodeIndex);
 
         if (nextNode == NodeType.Shop)
         {
-            Debug.Log("¡TIENDA ENCONTRADA! Nodo: " + (enemiesDefeatedThisRun + 1));
+            Debug.Log("¡TIENDA ENCONTRADA! Nodo: " + (currentNodeIndex + 1));
             OnShopReached?.Invoke();
             return; // Detenemos el flujo aquí hasta que el jugador salga de la tienda
         }
@@ -134,23 +142,27 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
-        bool isFinalBoss = (nextNode == NodeType.Boss);
+        bool isBoss = (nextNode == NodeType.Boss);
         
         EnemyData enemyData;
         EnemyTier tier;
 
-        if (isFinalBoss)
+        if (isBoss)
         {
-            // Boss final: Tier 3 garantizado
+            // Todos los bosses (intermedios o final) son Tier 3 garantizado
             (enemyData, tier) = GetRandomEnemyWithTier(EnemyTier.Tier_3);
-            Debug.Log("BOSS FINAL! Enemigo " + maxEnemiesPerRun + " de " + maxEnemiesPerRun);
+            
+            if (currentNodeIndex >= maxEnemiesPerRun - 1)
+                Debug.Log("BOSS FINAL! Enemigo " + maxEnemiesPerRun + " de " + maxEnemiesPerRun);
+            else
+                Debug.Log("BOSS DE ZONA! Enemigo " + (currentNodeIndex + 1) + " de " + maxEnemiesPerRun);
         }
         else
         {
             // Enemigo normal con progresión
             tier = GetTierBasedOnProgression();
             (enemyData, tier) = GetRandomEnemyWithTier(tier);
-            Debug.Log("Enemigo " + (enemiesDefeatedThisRun + 1) + " de " + maxEnemiesPerRun + " (Tier: " + tier + ")");
+            Debug.Log("Enemigo " + (currentNodeIndex + 1) + " de " + maxEnemiesPerRun + " (Tier: " + tier + ")");
         }
 
         if (enemyData == null)
@@ -161,8 +173,8 @@ public class BossRushManager : MonoBehaviour
 
         float currentMultiplier = 1f;
 
-        // Si es el boss final, aplicamos el multiplicador al iniciar el combate
-        if (isFinalBoss)
+        // Aplicamos el multiplicador a cualquier Boss
+        if (isBoss)
         {
             currentMultiplier = bossStatsMultiplier;
             Debug.Log("Boss stats multiplicados x" + bossStatsMultiplier);
@@ -183,7 +195,7 @@ public class BossRushManager : MonoBehaviour
     /// </summary>
     EnemyTier GetTierBasedOnProgression()
     {
-        int currentEnemy = enemiesDefeatedThisRun + 1;
+        int currentEnemy = currentNodeIndex + 1;
         float progress = (float)currentEnemy / maxEnemiesPerRun;
 
         // Definir probabilidades según progresión
@@ -278,22 +290,20 @@ public class BossRushManager : MonoBehaviour
     {
         if (!runInProgress) return;
 
-        if (victory)
+        // Avanzamos el índice del nodo sin importar si ganamos o perdimos (siempre que sigamos vivos)
+        currentNodeIndex++;
+        Debug.Log("Nodos completados en esta run: " + currentNodeIndex);
+        
+        // Notificar progresión (usamos currentNodeIndex como el avance actual)
+        OnProgressionUpdate?.Invoke(currentNodeIndex, maxEnemiesPerRun);
+        
+        // Verificar si completó la run (llegó al final del recorrido)
+        if (currentNodeIndex >= maxEnemiesPerRun)
         {
-            enemiesDefeatedThisRun++;
-            Debug.Log("Enemigos derrotados en esta run: " + enemiesDefeatedThisRun);
+            Debug.Log("RUN COMPLETADA! Llegaste al final del calabozo.");
+            EndRun(currentScore);
             
-            // Notificar progresión
-            OnProgressionUpdate?.Invoke(enemiesDefeatedThisRun, maxEnemiesPerRun);
-            
-            // Verificar si completó la run (derrotó al boss final)
-            if (enemiesDefeatedThisRun >= maxEnemiesPerRun)
-            {
-                Debug.Log("RUN COMPLETADA! Derrotaste al boss final!");
-                EndRun(currentScore);
-                
-                // Aquí podrías mostrar una pantalla de victoria especial
-            }
+            // Aquí podrías mostrar una pantalla de victoria especial
         }
     }
 
@@ -321,10 +331,7 @@ public class BossRushManager : MonoBehaviour
         EndRun(finalScore);
         
         // Limpiar guardado
-        if (RunSaveManager.Instance != null)
-        {
-            RunSaveManager.Instance.ClearSavedRun();
-        }
+        RunSaveManager.ClearSavedRun();
     }
 
     public void EndRun(int finalScore)
@@ -336,18 +343,15 @@ public class BossRushManager : MonoBehaviour
         }
 
         Debug.Log("BossRushManager: Run terminada");
-        Debug.Log("Enemigos derrotados: " + enemiesDefeatedThisRun);
+        Debug.Log("Nodos completados: " + currentNodeIndex);
         Debug.Log("Score final: " + finalScore);
         
         runInProgress = false;
         
-        OnRunEnded?.Invoke(finalScore, enemiesDefeatedThisRun);
+        OnRunEnded?.Invoke(finalScore, currentNodeIndex);
         
         // Limpiar guardado
-        if (RunSaveManager.Instance != null)
-        {
-            RunSaveManager.Instance.ClearSavedRun();
-        }
+        RunSaveManager.ClearSavedRun();
     }
 
     public void ForceEndRun()
@@ -362,29 +366,29 @@ public class BossRushManager : MonoBehaviour
     /// <summary>
     /// Restaura el estado de una run guardada
     /// </summary>
-    public void RestoreRunState(CombatMode mode, int enemiesDefeated)
+    public void RestoreRunState(int savedNodeIndex)
     {
-        Debug.Log("BossRushManager: Restaurando run - Modo: " + mode + ", Enemigos derrotados: " + enemiesDefeated);
+        Debug.Log("BossRushManager: Restaurando run - Nodo: " + savedNodeIndex);
         
         runInProgress = true;
-        defaultMode = mode;
-        enemiesDefeatedThisRun = enemiesDefeated;
+        defaultMode = CombatMode.TraditionalRPG;
+        currentNodeIndex = savedNodeIndex;
         
-        OnRunStarted?.Invoke(mode);
-        OnProgressionUpdate?.Invoke(enemiesDefeatedThisRun, maxEnemiesPerRun);
+        OnRunStarted?.Invoke(defaultMode);
+        OnProgressionUpdate?.Invoke(currentNodeIndex, maxEnemiesPerRun);
     }
 
     public void ClearCurrentRun()
     {
         runInProgress = false;
-        enemiesDefeatedThisRun = 0;
+        currentNodeIndex = 0;
         totalTurnsUsed = 0;
     }
 
     // GETTERS
     public bool IsRunInProgress() => runInProgress;
-    public int GetEnemiesDefeatedThisRun() => enemiesDefeatedThisRun;
+    public int GetCurrentNodeIndex() => currentNodeIndex;
     public CombatMode GetCurrentMode() => defaultMode;
     public int GetMaxEnemies() => maxEnemiesPerRun;
-    public float GetRunProgress() => (float)enemiesDefeatedThisRun / maxEnemiesPerRun;
+    public float GetRunProgress() => (float)currentNodeIndex / maxEnemiesPerRun;
 }

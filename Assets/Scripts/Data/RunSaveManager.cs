@@ -10,24 +10,19 @@ public class RunSaveManager : MonoBehaviour
 {
     public static RunSaveManager Instance { get; private set; }
 
-    private const string SAVE_KEY = "CurrentRunSave";
-    private const string HAS_SAVE_KEY = "HasSavedRun";
+    public const string SAVE_KEY = "CurrentRunSave";
+    public const string HAS_SAVE_KEY = "HasSavedRun";
 
     [Header("References")]
     public PlayerManager playerManager;
     public BossRushManager bossRushManager;
     public CombatManager combatManager;
-    
-    [Header("UI References")]
-    public GameObject startMenuPanel;
-    public GameObject gameplayPanel;
 
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -101,7 +96,7 @@ public class RunSaveManager : MonoBehaviour
             destrezaCards = playerManager.GetCards(AffinityType.Destreza),
             
             // Run
-            enemiesDefeatedThisRun = bossRushManager.GetEnemiesDefeatedThisRun(),
+            enemiesDefeatedThisRun = bossRushManager.GetCurrentNodeIndex(),
             
             // Combate actual
             isInCombat = false
@@ -179,12 +174,6 @@ public class RunSaveManager : MonoBehaviour
     /// </summary>
     void ApplySaveData(RunSaveData saveData)
     {
-        // Activar UI de gameplay y ocultar menu
-        if (startMenuPanel != null)
-            startMenuPanel.SetActive(false);
-        
-        if (gameplayPanel != null)
-            gameplayPanel.SetActive(true);
 
         // Parsear modo de combate
         CombatMode mode;
@@ -212,7 +201,7 @@ public class RunSaveManager : MonoBehaviour
         playerManager.AddCards(AffinityType.Destreza, saveData.destrezaCards);
 
         // Marcar run como en progreso
-        bossRushManager.RestoreRunState(mode, saveData.enemiesDefeatedThisRun);
+        bossRushManager.RestoreRunState(saveData.enemiesDefeatedThisRun);
 
         // Si habia combate activo, restaurarlo
         if (saveData.isInCombat)
@@ -276,7 +265,7 @@ public class RunSaveManager : MonoBehaviour
     /// <summary>
     /// Verifica si existe una run guardada
     /// </summary>
-    public bool HasSavedRun()
+    public static bool HasSavedRun()
     {
         return PlayerPrefs.GetInt(HAS_SAVE_KEY, 0) == 1;
     }
@@ -284,7 +273,7 @@ public class RunSaveManager : MonoBehaviour
     /// <summary>
     /// Obtiene informacion de la run guardada sin cargarla
     /// </summary>
-    public RunSaveData GetSavedRunInfo()
+    public static RunSaveData GetSavedRunInfo()
     {
         if (!HasSavedRun()) return null;
 
@@ -305,7 +294,7 @@ public class RunSaveManager : MonoBehaviour
     /// Elimina la run guardada
     /// Llamar al terminar una run (victoria o derrota)
     /// </summary>
-    public void ClearSavedRun()
+    public static void ClearSavedRun()
     {
         PlayerPrefs.DeleteKey(SAVE_KEY);
         PlayerPrefs.SetInt(HAS_SAVE_KEY, 0);

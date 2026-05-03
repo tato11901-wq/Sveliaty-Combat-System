@@ -9,14 +9,10 @@ using TMPro;
 public class StartMenuUI : MonoBehaviour
 {
     [Header("References")]
-    public GameManager gameManager;
-    public RunSaveManager runSaveManager;
     public GameObject bestiaryPanel; // Panel del bestiario
-    public GameObject[] Combatpanels;
 
     [Header("UI Elements")]
     public Button continueButton;
-    public Button newRunPlayerChoosesButton;
     public Button newRunRPGButton;
     public Button bestiaryButton;
     public Button quitButton;
@@ -32,11 +28,9 @@ public class StartMenuUI : MonoBehaviour
             continueButton.onClick.AddListener(OnContinuePressed);
         
         
-        if (newRunPlayerChoosesButton != null)
-            newRunPlayerChoosesButton.onClick.AddListener(() => OnNewRunPressed(CombatMode.PlayerChooses));
         
         if (newRunRPGButton != null)
-            newRunRPGButton.onClick.AddListener(() => OnNewRunPressed(CombatMode.TraditionalRPG));
+            newRunRPGButton.onClick.AddListener(() => OnNewRunPressed());
 
         if (bestiaryButton != null)
         {
@@ -66,13 +60,7 @@ public class StartMenuUI : MonoBehaviour
     /// </summary>
     void RefreshUI()
     {
-        if (runSaveManager == null)
-        {
-            Debug.LogError("RunSaveManager no asignado");
-            return;
-        }
-
-        bool hasSavedRun = runSaveManager.HasSavedRun();
+        bool hasSavedRun = RunSaveManager.HasSavedRun();
 
         // Mostrar/ocultar boton continuar
         if (continueButton != null)
@@ -83,7 +71,7 @@ public class StartMenuUI : MonoBehaviour
         // Actualizar texto del boton
         if (hasSavedRun && continueButtonText != null)
         {
-            RunSaveManager.RunSaveData saveInfo = runSaveManager.GetSavedRunInfo();
+            RunSaveManager.RunSaveData saveInfo = RunSaveManager.GetSavedRunInfo();
             
             if (saveInfo != null)
             {
@@ -114,13 +102,7 @@ public class StartMenuUI : MonoBehaviour
     /// </summary>
     void OnContinuePressed()
     {
-        if (runSaveManager == null)
-        {
-            Debug.LogError("RunSaveManager no asignado");
-            return;
-        }
-
-        if (!runSaveManager.HasSavedRun())
+        if (!RunSaveManager.HasSavedRun())
         {
             Debug.LogWarning("No hay run guardada para continuar");
             return;
@@ -128,50 +110,30 @@ public class StartMenuUI : MonoBehaviour
 
         Debug.Log("Continuando run guardada...");
 
-        // Cargar run
-        bool success = runSaveManager.LoadSavedRun();
-
-        if (success)
-        {
-            // Ocultar menu
-            gameObject.SetActive(false);
-            
-            // Activar gameplay panel
-            if (gameManager != null)
-            {
-                for (int i = 0; i < Combatpanels.Length; i++)
-                {
-                    Combatpanels[i].SetActive(true);
-                }
-            }
-        }
-        else
-        {
-            Debug.LogError("Error al cargar run guardada");
-            // Aqui podrias mostrar un mensaje de error al jugador
-        }
+        Sveliaty.Core.GlobalData.ShouldLoadSave = true;
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Combat Scene");
     }
 
     /// <summary>
     /// Iniciar nueva run
     /// </summary>
-    void OnNewRunPressed(CombatMode mode)
+    void OnNewRunPressed()
     {
         // Si hay run guardada, preguntar confirmacion
-        if (runSaveManager != null && runSaveManager.HasSavedRun())
+        if (RunSaveManager.HasSavedRun())
         {
-            ShowNewRunConfirmation(mode);
+            ShowNewRunConfirmation();
         }
         else
         {
-            StartNewRun(mode);
+            StartNewRun();
         }
     }
 
     /// <summary>
     /// Muestra panel de confirmacion para sobrescribir run guardada
     /// </summary>
-    void ShowNewRunConfirmation(CombatMode mode)
+    void ShowNewRunConfirmation()
     {
         // Aqui podrias crear un panel de confirmacion
         // Por ahora, preguntamos directamente
@@ -180,28 +142,17 @@ public class StartMenuUI : MonoBehaviour
         
         // TODO: Crear UI de confirmacion
         // Por ahora, iniciar directamente
-        StartNewRun(mode);
+        StartNewRun();
     }
 
-    void StartNewRun(CombatMode mode)
+    void StartNewRun()
     {
-        Debug.Log("Iniciando nueva run: " + mode);
+        Debug.Log("Iniciando nueva run");
 
-        // Eliminar guardado anterior
-        if (runSaveManager != null)
-        {
-            runSaveManager.ClearSavedRun();
-        }
+        RunSaveManager.ClearSavedRun();
 
-        // Iniciar run
-        if (gameManager != null)
-        {
-            gameManager.StartNewRun(mode);
-        }
-        else
-        {
-            Debug.LogError("GameManager no asignado");
-        }
+        Sveliaty.Core.GlobalData.ShouldLoadSave = false;
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Combat Scene");
     }
 
     void OnQuitPressed()

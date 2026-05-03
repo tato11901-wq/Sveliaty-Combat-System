@@ -5,6 +5,7 @@ public class EnemyData : ScriptableObject
 {
     public int id;
     public string displayName;
+    public Sprite enemySprite;
 
     [Header("Modo Passive")]
     [Tooltip("Afinidad que suma automáticamente en modo Passive")]

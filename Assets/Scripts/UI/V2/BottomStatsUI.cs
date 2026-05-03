@@ -7,10 +7,17 @@ namespace Sveliaty.UI.V2
 {
     public class BottomStatsUI : MonoBehaviour
     {
-        [Header("Health Visuals")]
-        public Transform healthContainer;
-        public GameObject fullHeartPrefab;
-        public GameObject emptyHeartPrefab;
+        [Header("Player Health Visuals")]
+        [Tooltip("Imagen tipo 'Filled' para la barra de vida")]
+        public UnityEngine.UI.Image healthFillImage;
+        [Tooltip("Texto numérico XX/YY")]
+        public TextMeshProUGUI healthText;
+        
+        [Header("Enemy Health Visuals")]
+        [Tooltip("Imagen tipo 'Filled' para la barra de vida del enemigo")]
+        public UnityEngine.UI.Image enemyHealthFillImage;
+        [Tooltip("Texto numérico XX/YY del enemigo")]
+        public TextMeshProUGUI enemyHealthText;
         
         [Header("Attempts Visuals")]
         public Transform attemptsContainer;
@@ -22,21 +29,29 @@ namespace Sveliaty.UI.V2
 
         public void UpdateHealth(int currentHealth, int maxHealth)
         {
-            if (healthContainer == null) return;
-
-            // Limpiar corazones viejos
-            foreach (var h in activeHearts) Destroy(h);
-            activeHearts.Clear();
-
-            // Dibujar corazones
-            for (int i = 0; i < maxHealth; i++)
+            if (healthText != null)
             {
-                GameObject prefabToUse = (i < currentHealth) ? fullHeartPrefab : emptyHeartPrefab;
-                if (prefabToUse != null)
-                {
-                    GameObject heart = Instantiate(prefabToUse, healthContainer);
-                    activeHearts.Add(heart);
-                }
+                healthText.text = $"{currentHealth}/{maxHealth}";
+            }
+
+            if (healthFillImage != null && maxHealth > 0)
+            {
+                float fillAmount = (float)Mathf.Max(0, currentHealth) / maxHealth;
+                healthFillImage.DOFillAmount(fillAmount, 0.3f).SetEase(Ease.OutCubic);
+            }
+        }
+
+        public void UpdateEnemyHealth(int currentHealth, int maxHealth)
+        {
+            if (enemyHealthText != null)
+            {
+                enemyHealthText.text = $"{currentHealth}/{maxHealth}";
+            }
+
+            if (enemyHealthFillImage != null && maxHealth > 0)
+            {
+                float fillAmount = (float)Mathf.Max(0, currentHealth) / maxHealth;
+                enemyHealthFillImage.DOFillAmount(fillAmount, 0.3f).SetEase(Ease.OutCubic);
             }
         }
 
@@ -57,10 +72,10 @@ namespace Sveliaty.UI.V2
         public void PlayDamageAnimation()
         {
             // Shake a la barra de vida o a la cámara
-            if (healthContainer != null)
+            if (healthFillImage != null)
             {
-                healthContainer.DOComplete();
-                healthContainer.DOShakePosition(0.4f, 15f, 20);
+                healthFillImage.transform.parent.DOComplete();
+                healthFillImage.transform.parent.DOShakePosition(0.4f, 15f, 20);
             }
 
             Camera mainCam = Camera.main;

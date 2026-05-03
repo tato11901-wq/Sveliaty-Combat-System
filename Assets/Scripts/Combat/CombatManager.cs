@@ -43,11 +43,12 @@ public class CombatManager : MonoBehaviour
     // === EVENTOS PARA PASIVAS ===
     public event Action OnCombatStartEvent;
     public event Action<CombatAction, float> OnDamageResolveEvent;
-    public event Action<int> OnHitReceivedEvent; // Cuando el jugador recibe daño
+    public event Action<int> OnHitReceivedEvent;
     public event Action OnEnemyDefeatedEvent;
     public event Action OnCombatEndEvent;
     public event Action<TurnContext> OnTurnStartEvent;
     public event Action OnEnemyTurnEvent;
+    public event Action<string> OnEnemyActionEvent; // Descripción de la acción del enemigo para el log
 
     public void StartCombat(EnemyData enemyData, EnemyTier tier, CombatMode mode, float statsMultiplier = 1f)
     {
@@ -129,16 +130,6 @@ public class CombatManager : MonoBehaviour
             playerManager.AddScore(CalculateScorePerCombat(multiplier));
             EndCombat(true, playerManager.GetScore(), multiplier);
         }
-        else
-        {
-            currentEnemy.attemptsRemaining--;
-            NotifyAttemptsChanged();
-            
-            if (currentEnemy.attemptsRemaining <= 0)
-            {
-                EndCombat(false, playerManager.GetScore(), multiplier);
-            }
-        }
 
         OnAttackResult?.Invoke(roll, statBonus, totalFinal, multiplier);
     }
@@ -209,13 +200,18 @@ public class CombatManager : MonoBehaviour
         currentPhase = TurnPhase.TurnEnd;
         Debug.Log("Fase TurnEnd: Procesando consumo de turno...");
 
-        if (attackSuccess)
-        {
-            bool consumedTurn = action.ConsumeTurn(this);
-            if (consumedTurn) turnsUsedThisCombat++;
-        }
+        // Se consume el turno independientemente de si el ataque acertó o falló
+        bool consumedTurn = action.ConsumeTurn(this);
+        if (consumedTurn) turnsUsedThisCombat++;
         
         if (RunSaveManager.Instance != null) RunSaveManager.Instance.AutoSave();
+
+        // Verificar si el combate terminó por agotar los intentos
+        if (!combatEnded && currentEnemy != null && currentEnemy.attemptsRemaining <= 0 && currentEnemy.currentRPGHealth > 0)
+        {
+            // El último multiplicador no está disponible aquí, usamos 1f
+            EndCombat(false, playerManager.GetScore(), 1f); 
+        }
 
         // Si el combate no terminó, procedemos al turno del enemigo
         if (!combatEnded)
@@ -238,40 +234,43 @@ public class CombatManager : MonoBehaviour
         
         float totalWeight = data.healChance + data.armorChance + data.thornsChance + data.speedChance + data.doNothingChance;
         float randomVal = UnityEngine.Random.Range(0f, totalWeight);
+        string actionDescription;
 
         if (randomVal < data.healChance)
         {
-            // Curación
             int healAmount = UnityEngine.Random.Range(10, 25);
             currentEnemy.currentRPGHealth += healAmount;
             if (currentEnemy.currentRPGHealth > currentEnemy.enemyTierData.RPGLife) 
                 currentEnemy.currentRPGHealth = currentEnemy.enemyTierData.RPGLife;
+            actionDescription = $"Se cura {healAmount} de vida. (HP: {currentEnemy.currentRPGHealth})";
             Debug.Log($"El enemigo se curó {healAmount} de vida.");
         }
         else if (randomVal < data.healChance + data.armorChance)
         {
-            // Armadura
-            currentEnemy.activeArmor += UnityEngine.Random.Range(10, 20);
+            int armorGained = UnityEngine.Random.Range(10, 20);
+            currentEnemy.activeArmor += armorGained;
+            actionDescription = $"Gana {armorGained} de Armadura. (Total: {currentEnemy.activeArmor})";
             Debug.Log($"El enemigo ganó armadura. Armadura actual: {currentEnemy.activeArmor}");
         }
         else if (randomVal < data.healChance + data.armorChance + data.thornsChance)
         {
-            // Espinas
             currentEnemy.activeThorns = UnityEngine.Random.Range(0.1f, 0.3f);
+            actionDescription = $"Activa Espinas ({currentEnemy.activeThorns * 100:F0}% daño reflejado).";
             Debug.Log($"El enemigo activó Espinas ({currentEnemy.activeThorns * 100}% de daño reflejado).");
         }
         else if (randomVal < data.healChance + data.armorChance + data.thornsChance + data.speedChance)
         {
-            // Velocidad
             currentEnemy.hasSpeedEvasion = true;
+            actionDescription = "Activa Velocidad. Puede evadir el próximo ataque.";
             Debug.Log($"El enemigo activó Velocidad. Su próximo ataque podría ser evadido.");
         }
         else
         {
-            // No hacer nada
+            actionDescription = "Decide no hacer nada.";
             Debug.Log($"El enemigo decidió no hacer nada este turno.");
         }
 
+        OnEnemyActionEvent?.Invoke(actionDescription);
         Debug.Log("--- FIN DEL TURNO (Ronda Completada) ---");
     }
 
@@ -281,9 +280,19 @@ public class CombatManager : MonoBehaviour
 
         isProcessingPostCombat = true;
         combatEnded = true;
-        AffinityType rewardCard = default;
 
         OnCombatEndEvent?.Invoke();
+
+        // Iniciamos la corrutina para darle tiempo a la UI de animar la vida bajando a 0
+        StartCoroutine(ProcessEndCombatDelay(victory, finalScore, lastMultiplier));
+    }
+
+    private System.Collections.IEnumerator ProcessEndCombatDelay(bool victory, int finalScore, float lastMultiplier)
+    {
+        // Esperamos a que terminen las animaciones de ataque y reducción de barra de vida
+        yield return new WaitForSeconds(0.6f);
+
+        AffinityType rewardCard = default;
 
         if (victory)
         {
@@ -354,7 +363,7 @@ public class CombatManager : MonoBehaviour
                 {
                     playerManager.ModifyHealth(-damage);
                     OnHitReceivedEvent?.Invoke(damage);
-                    OnCombatEnd?.Invoke(false, finalScore, rewardCard, damage);
+                    OnCombatEnd?.Invoke(false, finalScore, default, damage);
                 }
             }
         }

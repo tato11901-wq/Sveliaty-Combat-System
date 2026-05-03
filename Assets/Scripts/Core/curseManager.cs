@@ -14,7 +14,8 @@ public class CurseManager : MonoBehaviour
     [Range(0, 100)] public float curseChancePerTurn = 5f;
     [Range(0, 100)] public float spiritCurseChance = 80f;
 
-    private List<CurseInstance> activeCurses = new List<CurseInstance>();
+    [Header("Debug Inspector")]
+    [SerializeField] private List<CurseInstance> activeCurses = new List<CurseInstance>();
     private int combatsWithoutRewards = 0;
 
     public event Action<CurseData> OnCurseObtained;

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 using DG.Tweening;
 
 namespace Sveliaty.UI.V2
@@ -12,54 +13,78 @@ namespace Sveliaty.UI.V2
         public CombatManager combatManager;
         public AbilityManager abilityManager;
 
-        [Header("Deck Selectors")]
-        public Button fuerzaDeckButton;
+        [Header("Botones de Mazo (Estáticos en Escena)")]
+        public Button fuerzaButton;
+        public Button agilidadButton;
+        public Button destrezaButton;
+
+        [Header("Contador de Cartas en Botones (Opcional)")]
         public TextMeshProUGUI fuerzaCountText;
-        public Button agilidadDeckButton;
         public TextMeshProUGUI agilidadCountText;
-        public Button destrezaDeckButton;
         public TextMeshProUGUI destrezaCountText;
 
         [Header("Cards Display")]
+        [Tooltip("Contenedor donde se despliegan las cartas del mazo al abrir uno")]
         public Transform cardsContainer;
-        public GameObject cardPrefab; // Prefab con un componente Button y visuales de la carta
-        
+        public GameObject cardPrefab;
+
         private List<GameObject> activeCards = new List<GameObject>();
 
         private void Start()
         {
-            fuerzaDeckButton?.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Fuerza));
-            agilidadDeckButton?.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Agilidad));
-            destrezaDeckButton?.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Destreza));
+            if (fuerzaButton != null)
+                fuerzaButton.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Fuerza));
+
+            if (agilidadButton != null)
+                agilidadButton.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Agilidad));
+
+            if (destrezaButton != null)
+                destrezaButton.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Destreza));
         }
 
+        /// <summary>
+        /// Actualiza los contadores de cartas en los botones de mazo.
+        /// </summary>
         public void UpdateDeckCounts(PlayerManager playerManager)
         {
             if (playerManager == null) return;
 
-            if (fuerzaCountText != null) fuerzaCountText.text = playerManager.GetCards(AffinityType.Fuerza).ToString();
-            if (agilidadCountText != null) agilidadCountText.text = playerManager.GetCards(AffinityType.Agilidad).ToString();
-            if (destrezaCountText != null) destrezaCountText.text = playerManager.GetCards(AffinityType.Destreza).ToString();
-            
-            // Refrescar las cartas visibles si es que hay un mazo abierto
-            // Nota: Podrías querer guardar qué afinidad está abierta y volver a llamar a ShowCardsForAffinity
+            int fuerza   = playerManager.GetCards(AffinityType.Fuerza);
+            int agilidad = playerManager.GetCards(AffinityType.Agilidad);
+            int destreza = playerManager.GetCards(AffinityType.Destreza);
+
+            if (fuerzaCountText   != null) fuerzaCountText.text   = fuerza.ToString();
+            if (agilidadCountText != null) agilidadCountText.text = agilidad.ToString();
+            if (destrezaCountText != null) destrezaCountText.text = destreza.ToString();
+
+            // Los botones siempre están activos: el golpe básico siempre está disponible
         }
 
+        /// <summary>
+        /// Destruye todas las cartas de habilidad actualmente visibles.
+        /// </summary>
         public void HideAllCards()
         {
-            foreach (var card in activeCards) Destroy(card);
+            foreach (var card in activeCards)
+            {
+                if (card != null) Destroy(card);
+            }
             activeCards.Clear();
         }
 
         private void ShowCardsForAffinity(AffinityType type)
         {
             if (abilityManager == null || combatManager == null) return;
-            if (cardsContainer == null || cardPrefab == null) return;
+            if (cardsContainer == null || cardPrefab == null)
+            {
+                Debug.LogWarning("CardInteractionUI: Falta asignar cardsContainer o cardPrefab.");
+                return;
+            }
 
             HideAllCards();
 
             List<AbilityData> abilities = abilityManager.GetAvailableAbilities(type);
-            int playerLife = combatManager.GetPlayerLife();
+            int playerLife    = combatManager.GetPlayerLife();
             int enemyAttempts = combatManager.GetCurrentEnemy()?.attemptsRemaining ?? 0;
 
             foreach (AbilityData ability in abilities)
@@ -67,31 +92,36 @@ namespace Sveliaty.UI.V2
                 GameObject cardObj = Instantiate(cardPrefab, cardsContainer);
                 activeCards.Add(cardObj);
 
-                // Configurar visuales de la carta (Requiere un script en tu Prefab, ej: CardVisuals)
-                // Por ahora asumiremos que tiene Textos básicos en sus hijos
-                TextMeshProUGUI[] texts = cardObj.GetComponentsInChildren<TextMeshProUGUI>();
-                if (texts.Length > 0) texts[0].text = ability.abilityName;
+                // Rellenar visuals
+                CardVisuals visuals = cardObj.GetComponent<CardVisuals>();
+                if (visuals != null) visuals.Setup(ability);
 
+                // Configurar interacción
                 Button cardBtn = cardObj.GetComponent<Button>();
                 if (cardBtn != null)
                 {
                     bool canUse = abilityManager.CanUseAbility(ability, playerLife, enemyAttempts);
                     cardBtn.interactable = canUse;
-                    
+
                     if (canUse)
                     {
                         cardBtn.onClick.AddListener(() => ExecuteAttack(ability));
-                        
-                        // Animación hover sencilla
-                        EventTrigger trigger = cardObj.gameObject.AddComponent<EventTrigger>();
-                        EventTrigger.Entry entryEnter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-                        entryEnter.callback.AddListener((data) => { cardObj.transform.DOScale(1.1f, 0.2f); });
-                        trigger.triggers.Add(entryEnter);
 
-                        EventTrigger.Entry entryExit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-                        entryExit.callback.AddListener((data) => { cardObj.transform.DOScale(1f, 0.2f); });
-                        trigger.triggers.Add(entryExit);
+                        // Hover effect
+                        EventTrigger trigger = cardObj.gameObject.AddComponent<EventTrigger>();
+
+                        EventTrigger.Entry enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+                        enter.callback.AddListener(_ => cardObj.transform.DOScale(1.08f, 0.15f).SetUpdate(true));
+                        trigger.triggers.Add(enter);
+
+                        EventTrigger.Entry exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+                        exit.callback.AddListener(_ => cardObj.transform.DOScale(1f, 0.15f).SetUpdate(true));
+                        trigger.triggers.Add(exit);
                     }
+                }
+                else
+                {
+                    Debug.LogWarning($"CardInteractionUI: El prefab '{cardPrefab.name}' no tiene Button.");
                 }
             }
         }
@@ -99,11 +129,7 @@ namespace Sveliaty.UI.V2
         private void ExecuteAttack(AbilityData ability)
         {
             if (combatManager == null) return;
-
-            // Ocultar cartas al atacar
             HideAllCards();
-
-            // Lanzar el ataque usando el sistema de Commands
             combatManager.PlayerAttempt(new AbilityAction(ability));
         }
     }

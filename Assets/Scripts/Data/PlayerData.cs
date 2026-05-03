@@ -25,6 +25,7 @@ public class PlayerData
     [Header("Progresión y Combate")]
     public List<ItemData> obtainedItems;
     public List<ActiveSkillState> activeSkills;
+    public List<CurseInstance> activeCurses;
 
     public PlayerData(int startingMaxLife = 100)
     {
@@ -41,6 +42,7 @@ public class PlayerData
 
         obtainedItems = new List<ItemData>();
         activeSkills = new List<ActiveSkillState>();
+        activeCurses = new List<CurseInstance>();
     }
 }
 

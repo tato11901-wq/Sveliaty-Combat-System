@@ -12,26 +12,23 @@ public class PlayerManager : MonoBehaviour
 
     [Header("Vida del Jugador")]
     [SerializeField] private int maxLife = 100;
-    private int currentLife;
+    [SerializeField] private int currentLife;
 
     public int CurrentLife => currentLife;
     public int MaxLife => maxLife;
 
     [Header("Inventario de Cartas")]
-    private Dictionary<AffinityType, int> cards = new Dictionary<AffinityType, int>()
-    {
-        { AffinityType.Fuerza, 0 },
-        { AffinityType.Agilidad, 0 },
-        { AffinityType.Destreza, 0 }
-    };
+    [SerializeField] private int cartasFuerza = 0;
+    [SerializeField] private int cartasAgilidad = 0;
+    [SerializeField] private int cartasDestreza = 0;
 
     [Header("Puntuacion")]
-    private int score = 0;
+    [SerializeField] private int score = 0;
 
     [Header("Estadisticas")]
-    private int enemiesDefeated = 0;
-    private int combatsWon = 0;
-    private int combatsLost = 0;
+    [SerializeField] private int enemiesDefeated = 0;
+    [SerializeField] private int combatsWon = 0;
+    [SerializeField] private int combatsLost = 0;
 
     // Eventos
     public event Action<int, int> OnHealthChanged; // (currentLife, maxLife)
@@ -61,9 +58,9 @@ public class PlayerManager : MonoBehaviour
         currentLife = maxLife;
 
         // Resetear cartas
-        cards[AffinityType.Fuerza] = 0;
-        cards[AffinityType.Agilidad] = 0;
-        cards[AffinityType.Destreza] = 0;
+        cartasFuerza = 0;
+        cartasAgilidad = 0;
+        cartasDestreza = 0;
 
         // Dar cartas iniciales aleatorias
         for (int i = 0; i < initialCards; i++)
@@ -160,9 +157,16 @@ public class PlayerManager : MonoBehaviour
     {
         if (amount <= 0) return;
 
-        cards[type] += amount;
-        Debug.Log("+" + amount + " carta(s) de " + type + ". Total: " + cards[type]);
-        OnCardsChanged?.Invoke(type, cards[type]);
+        switch (type)
+        {
+            case AffinityType.Fuerza: cartasFuerza += amount; break;
+            case AffinityType.Agilidad: cartasAgilidad += amount; break;
+            case AffinityType.Destreza: cartasDestreza += amount; break;
+        }
+
+        int total = GetCards(type);
+        Debug.Log("+" + amount + " carta(s) de " + type + ". Total: " + total);
+        OnCardsChanged?.Invoke(type, total);
     }
 
     /// <summary>
@@ -171,11 +175,18 @@ public class PlayerManager : MonoBehaviour
     public bool RemoveCards(AffinityType type, int amount)
     {
         if (amount <= 0) return true;
-        if (cards[type] < amount) return false;
+        if (GetCards(type) < amount) return false;
 
-        cards[type] -= amount;
-        Debug.Log("-" + amount + " carta(s) de " + type + ". Total: " + cards[type]);
-        OnCardsChanged?.Invoke(type, cards[type]);
+        switch (type)
+        {
+            case AffinityType.Fuerza: cartasFuerza -= amount; break;
+            case AffinityType.Agilidad: cartasAgilidad -= amount; break;
+            case AffinityType.Destreza: cartasDestreza -= amount; break;
+        }
+
+        int total = GetCards(type);
+        Debug.Log("-" + amount + " carta(s) de " + type + ". Total: " + total);
+        OnCardsChanged?.Invoke(type, total);
         return true;
     }
 
@@ -184,7 +195,13 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public int GetCards(AffinityType type)
     {
-        return cards[type];
+        switch (type)
+        {
+            case AffinityType.Fuerza: return cartasFuerza;
+            case AffinityType.Agilidad: return cartasAgilidad;
+            case AffinityType.Destreza: return cartasDestreza;
+            default: return 0;
+        }
     }
 
     /// <summary>
@@ -192,7 +209,12 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public Dictionary<AffinityType, int> GetAllCards()
     {
-        return new Dictionary<AffinityType, int>(cards);
+        return new Dictionary<AffinityType, int>()
+        {
+            { AffinityType.Fuerza, cartasFuerza },
+            { AffinityType.Agilidad, cartasAgilidad },
+            { AffinityType.Destreza, cartasDestreza }
+        };
     }
 
     /// <summary>
@@ -200,7 +222,7 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public bool HasCards(AffinityType type, int amount)
     {
-        return cards[type] >= amount;
+        return GetCards(type) >= amount;
     }
 
     /// <summary>
@@ -212,11 +234,9 @@ public class PlayerManager : MonoBehaviour
 
         // Obtener tipos con cartas disponibles
         List<AffinityType> availableTypes = new List<AffinityType>();
-        foreach (AffinityType type in Enum.GetValues(typeof(AffinityType)))
-        {
-            if (cards[type] > 0)
-                availableTypes.Add(type);
-        }
+        if (cartasFuerza > 0) availableTypes.Add(AffinityType.Fuerza);
+        if (cartasAgilidad > 0) availableTypes.Add(AffinityType.Agilidad);
+        if (cartasDestreza > 0) availableTypes.Add(AffinityType.Destreza);
 
         if (availableTypes.Count == 0)
         {
@@ -307,9 +327,9 @@ public class PlayerManager : MonoBehaviour
         Debug.Log("=== ESTADO DEL JUGADOR ===");
         Debug.Log("Vida: " + currentLife + "/" + maxLife);
         Debug.Log("Score: " + score);
-        Debug.Log("Cartas - Fuerza: " + cards[AffinityType.Fuerza]);
-        Debug.Log("Cartas - Agilidad: " + cards[AffinityType.Agilidad]);
-        Debug.Log("Cartas - Destreza: " + cards[AffinityType.Destreza]);
+        Debug.Log("Cartas - Fuerza: " + cartasFuerza);
+        Debug.Log("Cartas - Agilidad: " + cartasAgilidad);
+        Debug.Log("Cartas - Destreza: " + cartasDestreza);
         Debug.Log("Enemigos derrotados: " + enemiesDefeated);
         Debug.Log("========================");
     }
