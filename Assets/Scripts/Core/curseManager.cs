@@ -200,6 +200,11 @@ public class CurseManager : MonoBehaviour
                     );
                     break;
 
+                case CurseEffect.EnemyStartsWithArmor:
+                    enemy.activeArmor += curse.data.effectValue;
+                    Debug.Log($"[Curse] Enemigo empieza con {curse.data.effectValue} armadura.");
+                    break;
+
                 case CurseEffect.InvertVictoryCondition:
                     Debug.Log("Condición de victoria invertida");
                     break;
@@ -270,7 +275,7 @@ public class CurseManager : MonoBehaviour
     {
         if (!curse.requiresPlayerActivation) return false;
 
-        var instance = activeCurses.FirstOrDefault(c => c.data.id == curse.id);
+        var instance = activeCurses.FirstOrDefault(c => c.data == curse);
         if (instance == null) return false;
 
         if (curse.mustActivateOnTurnOne && currentTurn != 1) return false;
@@ -280,7 +285,7 @@ public class CurseManager : MonoBehaviour
 
     public void ActivateCurse(CurseData curse)
     {
-        var instance = activeCurses.FirstOrDefault(c => c.data.id == curse.id);
+        var instance = activeCurses.FirstOrDefault(c => c.data == curse);
         if (instance == null) return;
 
         instance.isActivated = true;

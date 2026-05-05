@@ -23,4 +23,13 @@ public class CurseDatabase : ScriptableObject
         }
         return result;
     }
+
+    public CurseData GetCurseByName(string curseName)
+    {
+        foreach(var c in allCurses)
+        {
+            if (c != null && c.name == curseName) return c;
+        }
+        return null;
+    }
 }

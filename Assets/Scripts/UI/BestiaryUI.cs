@@ -87,8 +87,8 @@ public class BestiaryUI : MonoBehaviour
         EnemyData currentEnemy = enemyDatabase.allEnemies[currentEnemyIndex];
         
         // Verificar estado en bestiario
-        bool hasEncountered = bestiaryManager.HasEncountered(currentEnemy.id);
-        bool hasDefeated = bestiaryManager.HasDefeated(currentEnemy.id);
+        bool hasEncountered = bestiaryManager.HasEncountered(currentEnemy.name);
+        bool hasDefeated = bestiaryManager.HasDefeated(currentEnemy.name);
 
         // Actualizar nombre y descripcion
         UpdateEnemyInfo(currentEnemy, hasEncountered, hasDefeated);
@@ -152,8 +152,8 @@ public class BestiaryUI : MonoBehaviour
     {
         if (button == null) return;
 
-        bool discovered = bestiaryManager.IsTierDiscovered(enemy.id, tier);
-        bool defeated = bestiaryManager.IsTierDefeated(enemy.id, tier);
+        bool discovered = bestiaryManager.IsTierDiscovered(enemy.name, tier);
+        bool defeated = bestiaryManager.IsTierDefeated(enemy.name, tier);
 
         // Colorear segun estado
         Image buttonImage = button.GetComponent<Image>();
@@ -176,7 +176,7 @@ public class BestiaryUI : MonoBehaviour
     /// </summary>
     void UpdateAffinityDisplay(EnemyData enemy)
     {
-        bool hasEncountered = bestiaryManager.HasEncountered(enemy.id);
+        bool hasEncountered = bestiaryManager.HasEncountered(enemy.name);
 
         if (!hasEncountered)
         {
@@ -200,7 +200,7 @@ public class BestiaryUI : MonoBehaviour
     {
         if (text == null) return;
 
-        bool discovered = bestiaryManager.IsAffinityDiscovered(enemy.id, affinity);
+        bool discovered = bestiaryManager.IsAffinityDiscovered(enemy.name, affinity);
 
         if (!discovered)
         {
@@ -209,7 +209,7 @@ public class BestiaryUI : MonoBehaviour
         }
 
         // Obtener multiplicador
-        AffinityMultiplier multiplier = bestiaryManager.GetDiscoveredAffinityMultiplier(enemy.id, affinity);
+        AffinityMultiplier multiplier = bestiaryManager.GetDiscoveredAffinityMultiplier(enemy.name, affinity);
 
         string multiplierText = multiplier switch
         {
@@ -242,7 +242,7 @@ public class BestiaryUI : MonoBehaviour
     {
         if (enemySprite == null) return;
 
-        bool tierDiscovered = bestiaryManager.IsTierDiscovered(enemy.id, currentSelectedTier);
+        bool tierDiscovered = bestiaryManager.IsTierDiscovered(enemy.name, currentSelectedTier);
 
         if (!tierDiscovered)
         {

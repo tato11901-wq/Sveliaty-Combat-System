@@ -18,6 +18,8 @@ namespace Sveliaty.UI.V2
         public UnityEngine.UI.Image enemyHealthFillImage;
         [Tooltip("Texto numérico XX/YY del enemigo")]
         public TextMeshProUGUI enemyHealthText;
+        [Tooltip("Imagen tipo 'Filled' para la armadura del enemigo (Gris)")]
+        public UnityEngine.UI.Image enemyArmorFillImage;
         
         [Header("Attempts Visuals")]
         public Transform attemptsContainer;
@@ -49,17 +51,40 @@ namespace Sveliaty.UI.V2
             }
         }
 
-        public void UpdateEnemyHealth(int currentHealth, int maxHealth)
+        public void UpdateEnemyHealth(int currentHealth, int maxHealth, int currentArmor = 0)
         {
             if (enemyHealthText != null)
             {
-                enemyHealthText.text = $"{currentHealth}/{maxHealth}";
+                if (currentArmor > 0)
+                    enemyHealthText.text = $"{currentHealth} <color=#AAAAAA>(+{currentArmor} armadura)</color> / {maxHealth}";
+                else
+                    enemyHealthText.text = $"{currentHealth} / {maxHealth}";
             }
 
-            if (enemyHealthFillImage != null && maxHealth > 0)
+            if (maxHealth > 0)
             {
-                float fillAmount = (float)Mathf.Max(0, currentHealth) / maxHealth;
-                enemyHealthFillImage.DOFillAmount(fillAmount, 0.3f).SetEase(Ease.OutCubic);
+                float healthFill = (float)Mathf.Max(0, currentHealth) / maxHealth;
+                if (enemyHealthFillImage != null)
+                {
+                    enemyHealthFillImage.DOFillAmount(healthFill, 0.3f).SetEase(Ease.OutCubic);
+                }
+
+                if (enemyArmorFillImage != null)
+                {
+                    // Ahora la barra gris solo representa la cantidad de armadura (se dibuja encima de la salud)
+                    float armorFill = (float)Mathf.Max(0, currentArmor) / maxHealth;
+                    enemyArmorFillImage.DOFillAmount(armorFill, 0.3f).SetEase(Ease.OutCubic);
+                    
+                    // Desvanecer la barra gris si no hay armadura para que no estorbe visualmente
+                    if (currentArmor <= 0)
+                    {
+                        enemyArmorFillImage.DOFade(0f, 0.2f);
+                    }
+                    else
+                    {
+                        enemyArmorFillImage.DOFade(1f, 0.2f);
+                    }
+                }
             }
         }
 
@@ -77,11 +102,14 @@ namespace Sveliaty.UI.V2
             }
         }
 
-        public void UpdateCardStats(int fuerza, int agilidad, int destreza)
+        public void UpdateCardStats(int fuerza, int agilidad, int destreza, int itemFuerza = 0, int itemAgilidad = 0, int itemDestreza = 0)
         {
-            if (fuerzaCardsText != null) fuerzaCardsText.text = fuerza.ToString();
-            if (agilidadCardsText != null) agilidadCardsText.text = agilidad.ToString();
-            if (destrezaCardsText != null) destrezaCardsText.text = destreza.ToString();
+            if (fuerzaCardsText != null)
+                fuerzaCardsText.text = itemFuerza != 0 ? $"{fuerza} {(itemFuerza > 0 ? "+" : "")}{itemFuerza}" : fuerza.ToString();
+            if (agilidadCardsText != null)
+                agilidadCardsText.text = itemAgilidad != 0 ? $"{agilidad} {(itemAgilidad > 0 ? "+" : "")}{itemAgilidad}" : agilidad.ToString();
+            if (destrezaCardsText != null)
+                destrezaCardsText.text = itemDestreza != 0 ? $"{destreza} {(itemDestreza > 0 ? "+" : "")}{itemDestreza}" : destreza.ToString();
         }
 
         public void UpdateInk(int ink)
@@ -103,6 +131,22 @@ namespace Sveliaty.UI.V2
             {
                 mainCam.transform.DOComplete();
                 mainCam.transform.DOShakePosition(0.3f, 0.4f, 25, 90f);
+            }
+        }
+
+        public void PlayEnemyHealAnimation()
+        {
+            if (enemyHealthFillImage != null)
+            {
+                enemyHealthFillImage.transform.parent.DOComplete();
+                
+                Color originalColor = enemyHealthFillImage.color;
+                // La barra se pone verde durante medio segundo mientras sube, y luego vuelve a su color
+                enemyHealthFillImage.DOColor(Color.green, 0.2f).OnComplete(() => {
+                    enemyHealthFillImage.DOColor(originalColor, 0.4f);
+                });
+                
+                enemyHealthFillImage.transform.parent.DOPunchScale(Vector3.one * 0.15f, 0.4f);
             }
         }
     }

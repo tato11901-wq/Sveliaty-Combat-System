@@ -12,8 +12,8 @@ public class AbilityDatabase : ScriptableObject
         return allAbilities.Where(a => a.affinityType == type).ToList();
     }
     
-    public AbilityData GetAbilityById(int id)
+    public AbilityData GetAbilityByName(string abilityName)
     {
-        return allAbilities.FirstOrDefault(a => a.id == id);
+        return allAbilities.FirstOrDefault(a => a != null && a.name == abilityName);
     }
 }

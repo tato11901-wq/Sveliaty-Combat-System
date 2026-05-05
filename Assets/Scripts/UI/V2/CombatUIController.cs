@@ -41,6 +41,7 @@ namespace Sveliaty.UI.V2
             combatManager.OnCombatStart      += HandleCombatStart;
             combatManager.OnTurnStartEvent    += HandleTurnStart;
             combatManager.OnEnemyTurnEvent    += HandleEnemyTurn;
+            combatManager.OnEnemyHealedEvent  += HandleEnemyHealed;
             combatManager.OnEnemyActionEvent  += HandleEnemyAction;
             combatManager.OnHitReceivedEvent  += HandleHitReceived;
             combatManager.OnAttackResult      += HandleAttackResult;
@@ -87,6 +88,7 @@ namespace Sveliaty.UI.V2
             combatManager.OnCombatStart      -= HandleCombatStart;
             combatManager.OnTurnStartEvent    -= HandleTurnStart;
             combatManager.OnEnemyTurnEvent    -= HandleEnemyTurn;
+            combatManager.OnEnemyHealedEvent  -= HandleEnemyHealed;
             combatManager.OnEnemyActionEvent  -= HandleEnemyAction;
             combatManager.OnHitReceivedEvent  -= HandleHitReceived;
             combatManager.OnAttackResult      -= HandleAttackResult;
@@ -133,6 +135,7 @@ namespace Sveliaty.UI.V2
             // El jugador recupera el control, actualizamos los mazos
             cardInteractionUI?.UpdateDeckCounts(playerManager);
             UpdateTopBarEnemyInfo();
+            combatLogUI?.ClearTurnLog();
         }
 
         private void HandleEnemyTurn()
@@ -141,10 +144,16 @@ namespace Sveliaty.UI.V2
             UpdateTopBarEnemyInfo();
         }
 
+        private void HandleEnemyHealed()
+        {
+            bottomStatsUI?.PlayEnemyHealAnimation();
+        }
+
         private void HandleEnemyAction(string actionDescription)
         {
             string enemyName = combatManager.GetCurrentEnemy()?.enemyData.displayName ?? "Enemigo";
             combatLogUI?.LogEnemyAction($"{enemyName}: {actionDescription}");
+            UpdateTopBarEnemyInfo(); // Para reflejar curas o armadura
         }
 
         private void HandleHitReceived(int damage)
@@ -154,12 +163,12 @@ namespace Sveliaty.UI.V2
             bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife());
         }
 
-        private void HandleAttackResult(int roll, int bonus, int total, float multiplier)
+        private void HandleAttackResult(int roll, int bonus, int total, float multiplier, bool isCritical, float affinityMultiplier)
         {
             enemyVisualsUI?.PlayDamageAnimation();
             combatLogUI?.LogAttackResult(
                 combatManager.GetCurrentEnemy()?.enemyData.displayName ?? "Enemigo",
-                roll, bonus, total, multiplier
+                roll, bonus, total, multiplier, isCritical, affinityMultiplier
             );
             UpdateTopBarEnemyInfo();
         }
@@ -282,7 +291,7 @@ namespace Sveliaty.UI.V2
 
             if (bottomStatsUI != null && currentEnemy != null)
             {
-                bottomStatsUI.UpdateEnemyHealth(currentEnemy.currentRPGHealth, currentEnemy.enemyTierData.RPGLife);
+                bottomStatsUI.UpdateEnemyHealth(currentEnemy.currentRPGHealth, currentEnemy.maxRPGHealth, currentEnemy.activeArmor);
             }
         }
 
@@ -300,10 +309,21 @@ namespace Sveliaty.UI.V2
         {
             if (bottomStatsUI != null && playerManager != null)
             {
+                int itemFuerza = 0, itemAgilidad = 0, itemDestreza = 0;
+                if (combatManager != null && combatManager.statsManager != null)
+                {
+                    itemFuerza   = Mathf.RoundToInt(combatManager.statsManager.GetItemBonus(StatType.Fuerza));
+                    itemAgilidad = Mathf.RoundToInt(combatManager.statsManager.GetItemBonus(StatType.Velocidad));
+                    itemDestreza = Mathf.RoundToInt(combatManager.statsManager.GetItemBonus(StatType.Destreza));
+                }
+
                 bottomStatsUI.UpdateCardStats(
                     playerManager.GetCards(AffinityType.Fuerza),
                     playerManager.GetCards(AffinityType.Agilidad),
-                    playerManager.GetCards(AffinityType.Destreza)
+                    playerManager.GetCards(AffinityType.Destreza),
+                    itemFuerza,
+                    itemAgilidad,
+                    itemDestreza
                 );
             }
         }

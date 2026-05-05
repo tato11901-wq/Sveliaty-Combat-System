@@ -3,7 +3,6 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Sveliaty/Card/Ability Data")]
 public class AbilityData : ScriptableObject
 {
-    public int id;
     public string abilityName;
     public string description;
     public AffinityType affinityType; // Fuerza, Agilidad, Destreza

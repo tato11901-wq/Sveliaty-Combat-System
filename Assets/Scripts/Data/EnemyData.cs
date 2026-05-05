@@ -3,7 +3,6 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Sveliaty/Enemy/Enemy Data")]
 public class EnemyData : ScriptableObject
 {
-    public int id;
     public string displayName;
     public Sprite enemySprite;
 

@@ -57,5 +57,6 @@ public enum CurseEffect
     EscapeCombat,           // Escapar del combate actual
     NegateDamage,           // Evitar el daño de PERDER un combate (sigue en pie)
     NegateDeathBlow,        // Evitar la muerte: si ibas a morir, quedas con 1 HP
-    GamblingDice            // Efecto de dado aleatorio
+    GamblingDice,           // Efecto de dado aleatorio
+    EnemyStartsWithArmor    // Enemigo empieza con armadura (effectValue)
 }

@@ -76,6 +76,18 @@ public class ShopManager : MonoBehaviour
         OnRerollCostUpdated?.Invoke(GetCurrentRerollCost());
     }
 
+    /// <summary>
+    /// Llamado cuando el jugador decide cerrar la tienda.
+    /// Notifica al BossRushManager para continuar al siguiente nodo.
+    /// </summary>
+    public void CloseShop()
+    {
+        if (bossRushManager != null)
+        {
+            bossRushManager.CompleteShopNode();
+        }
+    }
+
     // ───────────────────────────────────────────────────────────────────────
     // GENERACIÓN DE SLOTS
     // ───────────────────────────────────────────────────────────────────────
@@ -109,6 +121,7 @@ public class ShopManager : MonoBehaviour
         // Elegir una al azar (pesos uniformes — se puede extender con weights en AbilityData)
         var chosen = candidates[UnityEngine.Random.Range(0, candidates.Count)];
         int cardCost = CalculateAbilityCardCost(chosen.targetTier);
+        if (Sveliaty.Passives.PassiveManager.Instance != null) cardCost = Sveliaty.Passives.PassiveManager.Instance.GetModifiedShopPrice(cardCost);
 
         return new ShopSlot(chosen.ability, chosen.targetTier, cardCost);
     }
@@ -159,6 +172,8 @@ public class ShopManager : MonoBehaviour
         if (item == null) return null;
 
         int price = item.GetScaledPrice(visitCount, settings.inkPriceScalePerVisit);
+        if (Sveliaty.Passives.PassiveManager.Instance != null) price = Sveliaty.Passives.PassiveManager.Instance.GetModifiedShopPrice(price);
+        
         return new ShopSlot(item, price);
     }
 

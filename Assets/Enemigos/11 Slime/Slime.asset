@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b49902360aca114ca57cefec09dacb9, type: 3}
   m_Name: Slime
   m_EditorClassIdentifier: 
-  id: 11
   displayName: Slime
+  enemySprite: {fileID: 0}
   affinityType: 2
   affinityRelations:
   - type: 0
@@ -26,3 +26,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: ec25ccefdf0cceb4b94abca52724eb4e, type: 2}
   - {fileID: 11400000, guid: 6c27fb4a752702d4d9e7f685311f2498, type: 2}
   - {fileID: 11400000, guid: 486cc7ad95d85be4ba072bbaaed6f51f, type: 2}
+  isSpirit: 0

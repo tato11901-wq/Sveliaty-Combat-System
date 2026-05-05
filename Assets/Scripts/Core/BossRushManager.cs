@@ -37,6 +37,16 @@ public class BossRushManager : MonoBehaviour
     [SerializeField] private int currentNodeIndex = 0;
     [SerializeField] private int totalTurnsUsed = 0;
     [SerializeField] private bool runInProgress = false;
+
+    [Header("Escalado (GDD: Curva Logística)")]
+    [Tooltip("Número de Elites derrotados en la run actual (activa el escalado)")]
+    [SerializeField] private int elitesDefeated = 0;
+    [Tooltip("Límite máximo del multiplicador extra (GDD: L = 2.5 para mayor agresividad)")]
+    public float scalingL = 2.5f;
+    [Tooltip("Velocidad de la curva (GDD: k = 0.5)")]
+    public float scalingK = 0.5f;
+    [Tooltip("Punto medio de la curva, en número de elites (GDD: m = 2 = Elite 2, Ronda 10)")]
+    public float scalingM = 2f;
     
     // Eventos
     public event Action<CombatMode> OnRunStarted;
@@ -71,6 +81,7 @@ public class BossRushManager : MonoBehaviour
         
         currentNodeIndex = 0;
         totalTurnsUsed = 0;
+        elitesDefeated = 0;
         
         if (playerManager != null)
         {
@@ -172,17 +183,36 @@ public class BossRushManager : MonoBehaviour
         }
 
         float currentMultiplier = 1f;
+        int extraAttempts = 0;
 
-        // Aplicamos el multiplicador a cualquier Boss
         if (isBoss)
         {
+            // Boss/Elite: usa el multiplicador fijo del inspector y +3 intentos
             currentMultiplier = bossStatsMultiplier;
-            Debug.Log("Boss stats multiplicados x" + bossStatsMultiplier);
+            extraAttempts = 3;
+            Debug.Log("Boss stats multiplicados x" + bossStatsMultiplier + " (+3 intentos)");
+        }
+        else
+        {
+            // Enemigo normal: aplica la curva logística SOLO si ya se derrotó al menos 1 élite
+            if (elitesDefeated > 0)
+            {
+                currentMultiplier = CalculateScalingMultiplier(elitesDefeated);
+                extraAttempts = elitesDefeated; // 1 por cada escalado (élite derrotado)
+                Debug.Log($"Escalado logistico aplicado: x{currentMultiplier:F2} (Elites: {elitesDefeated}, +{extraAttempts} intentos)");
+            }
+        }
+
+        if (Sveliaty.Passives.PassiveManager.Instance != null)
+        {
+            currentMultiplier = Sveliaty.Passives.PassiveManager.Instance.GetModifiedEnemyScaling(currentMultiplier);
+            extraAttempts = Sveliaty.Passives.PassiveManager.Instance.GetModifiedAttempts(extraAttempts);
         }
 
         if (combatManager != null)
         {
-            combatManager.StartCombat(enemyData, tier, defaultMode, currentMultiplier);
+            combatManager.StartCombat(enemyData, tier, defaultMode, currentMultiplier, extraAttempts);
+            if (isBoss) combatManager.SetEliteRound(true);
         }
         else
         {
@@ -290,6 +320,15 @@ public class BossRushManager : MonoBehaviour
     {
         if (!runInProgress) return;
 
+        // Si el nodo que acabó era un Boss/Elite, incrementar el contador de escalado
+        // (el escalado se activa independientemente de si ganaó o perdió, según el GDD)
+        NodeType completedNode = GetNodeType(currentNodeIndex);
+        if (completedNode == NodeType.Boss)
+        {
+            elitesDefeated++;
+            Debug.Log($"Elite derrotado. Total elites: {elitesDefeated}. Nuevo multiplicador: x{CalculateScalingMultiplier(elitesDefeated):F2}");
+        }
+
         // Avanzamos el índice del nodo sin importar si ganamos o perdimos (siempre que sigamos vivos)
         currentNodeIndex++;
         Debug.Log("Nodos completados en esta run: " + currentNodeIndex);
@@ -304,6 +343,30 @@ public class BossRushManager : MonoBehaviour
             EndRun(currentScore);
             
             // Aquí podrías mostrar una pantalla de victoria especial
+        }
+    }
+
+    public void CompleteShopNode()
+    {
+        if (!runInProgress) return;
+
+        // Avanzamos el índice del nodo
+        currentNodeIndex++;
+        Debug.Log("Saliendo de la tienda. Nodos completados en esta run: " + currentNodeIndex);
+        
+        // Notificar progresión (usamos currentNodeIndex como el avance actual)
+        OnProgressionUpdate?.Invoke(currentNodeIndex, maxEnemiesPerRun);
+        
+        // Verificar si completó la run (llegó al final del recorrido)
+        if (currentNodeIndex >= maxEnemiesPerRun)
+        {
+            Debug.Log("RUN COMPLETADA! Llegaste al final del calabozo.");
+            int currentScore = playerManager != null ? playerManager.GetScore() : 0;
+            EndRun(currentScore);
+        }
+        else
+        {
+            ContinueToNextCombat();
         }
     }
 
@@ -383,6 +446,19 @@ public class BossRushManager : MonoBehaviour
         runInProgress = false;
         currentNodeIndex = 0;
         totalTurnsUsed = 0;
+        elitesDefeated = 0;
+    }
+
+    /// <summary>
+    /// Calcula el multiplicador de stats según la fórmula logística del GDD:
+    /// S(n) = 1 + L / (1 + e^(-k * (n - m)))
+    /// Donde n = elites derrotados, L=1.8, k=0.32, m=2
+    /// </summary>
+    public float CalculateScalingMultiplier(int eliteCount)
+    {
+        float exponent = -scalingK * (eliteCount - scalingM);
+        float denominator = 1f + Mathf.Exp(exponent);
+        return 1f + scalingL / denominator;
     }
 
     // GETTERS
@@ -391,4 +467,6 @@ public class BossRushManager : MonoBehaviour
     public CombatMode GetCurrentMode() => defaultMode;
     public int GetMaxEnemies() => maxEnemiesPerRun;
     public float GetRunProgress() => (float)currentNodeIndex / maxEnemiesPerRun;
+    public int GetElitesDefeated() => elitesDefeated;
+    public float GetCurrentScalingMultiplier() => CalculateScalingMultiplier(elitesDefeated);
 }

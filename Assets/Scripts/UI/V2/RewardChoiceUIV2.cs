@@ -22,11 +22,12 @@ namespace Sveliaty.UI.V2
         public Transform cardsContainer;
         public GameObject cardPrefab;
 
-        [Header("Template Data (Opcional)")]
-        [Tooltip("Habilidades 'dummy' para mostrar como representación visual de la recompensa")]
-        public AbilityData fuerzaTemplate;
-        public AbilityData agilidadTemplate;
-        public AbilityData destrezaTemplate;
+        [Header("Contadores Actuales (Opcional)")]
+        public TextMeshProUGUI fuerzaCountText;
+        public TextMeshProUGUI agilidadCountText;
+        public TextMeshProUGUI destrezaCountText;
+
+
 
         private List<GameObject> activeCards = new List<GameObject>();
 
@@ -53,13 +54,21 @@ namespace Sveliaty.UI.V2
 
             ClearCards();
 
+            // Actualizar contadores si están asignados
+            if (combatManager != null && combatManager.playerManager != null)
+            {
+                if (fuerzaCountText != null) fuerzaCountText.text = $"Tienes {combatManager.playerManager.GetCards(AffinityType.Fuerza)} cartas de Fuerza";
+                if (agilidadCountText != null) agilidadCountText.text = $"Tienes {combatManager.playerManager.GetCards(AffinityType.Agilidad)} cartas de Agilidad";
+                if (destrezaCountText != null) destrezaCountText.text = $"Tienes {combatManager.playerManager.GetCards(AffinityType.Destreza)} cartas de Destreza";
+            }
+
             // Instanciar las 3 opciones
-            CreateRewardOption(fuerzaTemplate, AffinityType.Fuerza, 0);
-            CreateRewardOption(agilidadTemplate, AffinityType.Agilidad, 1);
-            CreateRewardOption(destrezaTemplate, AffinityType.Destreza, 2);
+            CreateRewardOption(AffinityType.Fuerza, 0);
+            CreateRewardOption(AffinityType.Agilidad, 1);
+            CreateRewardOption(AffinityType.Destreza, 2);
         }
 
-        private void CreateRewardOption(AbilityData template, AffinityType type, int index)
+        private void CreateRewardOption(AffinityType type, int index)
         {
             if (cardPrefab == null || cardsContainer == null) return;
 
@@ -68,9 +77,15 @@ namespace Sveliaty.UI.V2
 
             // Configurar visuales (usando el mismo script de cartas de combate)
             CardVisuals visuals = cardObj.GetComponent<CardVisuals>();
-            if (visuals != null && template != null)
+            if (visuals != null)
             {
-                visuals.Setup(template);
+                visuals.SetupReward(type);
+                
+                // Si el prefab tiene un contador interno, lo usamos también
+                if (combatManager != null && combatManager.playerManager != null)
+                {
+                    visuals.UpdateCount(combatManager.playerManager.GetCards(type));
+                }
             }
 
             // Animación de entrada

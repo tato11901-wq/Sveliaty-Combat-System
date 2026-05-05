@@ -12,18 +12,13 @@ namespace Sveliaty.UI.V2
     public class CombatLogUI : MonoBehaviour
     {
         [Header("References")]
-        [Tooltip("El ScrollRect que contiene el log")]
-        public ScrollRect scrollRect;
-        [Tooltip("El Transform Content dentro del ScrollRect (con Vertical Layout Group)")]
-        public Transform logContent;
-        [Tooltip("Prefab de una línea de texto del log (GameObject con TextMeshProUGUI)")]
-        public GameObject logLinePrefab;
+        [Tooltip("Texto principal donde se mostrará el resumen del turno")]
+        public TextMeshProUGUI turnSummaryText;
 
-        [Header("Settings")]
-        [Tooltip("Máximo de líneas antes de eliminar las más antiguas")]
-        public int maxLines = 50;
-
-        private List<GameObject> logLines = new List<GameObject>();
+        // Variables de estado del turno actual
+        private string playerAction = "";
+        private string enemyAction = "";
+        private string extraInfo = "";
 
         // === COLORES POR TIPO DE EVENTO ===
         private static readonly string COLOR_DAMAGE   = "#FF6B6B"; // Rojo suave - daño al enemigo
@@ -31,89 +26,102 @@ namespace Sveliaty.UI.V2
         private static readonly string COLOR_VICTORY  = "#6BCB77"; // Verde - victoria
         private static readonly string COLOR_ENEMY    = "#C77DFF"; // Morado - acción del enemigo
         private static readonly string COLOR_INFO     = "#ADB5BD"; // Gris - información general
-        private static readonly string COLOR_CRITICAL = "#FFD700"; // Dorado - multiplicador alto
+        private static readonly string COLOR_CRITICAL = "#4FC3F7"; // Azul brillante - golpe crítico
+        private static readonly string COLOR_AFFINITY = "#FF5252"; // Rojo brillante - súper efectivo (afinidad)
 
-        public void LogAttackResult(string abilityName, int roll, int bonus, int total, float multiplier)
+        public void LogAttackResult(string abilityName, int roll, int bonus, int total, float multiplier, bool isCritical = false, float affinityMultiplier = 1f)
         {
-            string multStr = multiplier >= 1.5f
-                ? $"<color={COLOR_CRITICAL}>x{multiplier:F1}</color>"
-                : $"x{multiplier:F1}";
+            // Construir etiquetas de estado
+            string tags = "";
+            if (affinityMultiplier >= 1.5f)
+                tags += $" <color={COLOR_AFFINITY}>¡SÚPER EFECTIVO!</color>";
+            else if (affinityMultiplier <= 0.5f && affinityMultiplier > 0f)
+                tags += $" <color={COLOR_INFO}>(Resistido)</color>";
+            else if (affinityMultiplier == 0f)
+                tags += $" <color={COLOR_INFO}>(Inmune)</color>";
+            
+            if (isCritical)
+                tags += $" <color={COLOR_CRITICAL}>¡CRÍTICO!</color>";
 
-            AddLine($"<color={COLOR_DAMAGE}>[ATAQUE] {abilityName}</color> → " +
-                    $"Dado: {roll} + Stat: {bonus} = <b>{total}</b> dmg ({multStr})");
+            playerAction = $"<color={COLOR_DAMAGE}>[TÚ]</color> {abilityName} → Dados: {roll} | Bonus: +{bonus} | Daño Total: {total} (x{multiplier:F1}){tags}";
+            UpdateSummary();
         }
 
         public void LogDamageReceived(int damage)
         {
-            AddLine($"<color={COLOR_RECEIVED}>[RECIBIDO] -{damage} HP</color>");
+            extraInfo = $"<color={COLOR_RECEIVED}>[RECIBIDO] -{damage} HP</color>";
+            UpdateSummary();
         }
 
         public void LogEnemyAction(string actionDescription)
         {
-            AddLine($"<color={COLOR_ENEMY}>[ENEMIGO] {actionDescription}</color>");
+            enemyAction = $"<color={COLOR_ENEMY}>[ENEMIGO]</color> {actionDescription}";
+            UpdateSummary();
         }
 
         public void LogCombatStart(string enemyName)
         {
-            AddSeparator();
-            AddLine($"<color={COLOR_INFO}>── Combate vs <b>{enemyName}</b> ──</color>");
+            ClearLog();
+            extraInfo = $"<color={COLOR_INFO}>── Combate vs <b>{enemyName}</b> ──</color>";
+            UpdateSummary();
         }
 
         public void LogCombatResult(bool victory, int finalScore)
         {
             if (victory)
-                AddLine($"<color={COLOR_VICTORY}>[VICTORIA] Score: {finalScore}</color>");
+                extraInfo = $"<color={COLOR_VICTORY}>[VICTORIA] Score: {finalScore}</color>";
             else
-                AddLine($"<color={COLOR_RECEIVED}>[DERROTA]</color>");
-            AddSeparator();
+                extraInfo = $"<color={COLOR_RECEIVED}>[DERROTA]</color>";
+            
+            UpdateSummary();
         }
 
         public void LogCurseObtained(string curseName)
         {
-            AddLine($"<color={COLOR_ENEMY}>[MALDICIÓN] Obtuviste: <b>{curseName}</b></color>");
+            extraInfo = $"<color={COLOR_ENEMY}>[MALDICIÓN] Obtuviste: <b>{curseName}</b></color>";
+            UpdateSummary();
         }
 
         public void Log(string message)
         {
-            AddLine($"<color={COLOR_INFO}>{message}</color>");
-        }
-
-        // ==================
-        // INTERNOS
-        // ==================
-
-        private void AddLine(string text)
-        {
-            if (logContent == null || logLinePrefab == null) return;
-
-            // Eliminar líneas viejas si supera el límite
-            if (logLines.Count >= maxLines)
-            {
-                Destroy(logLines[0]);
-                logLines.RemoveAt(0);
-            }
-
-            GameObject lineObj = Instantiate(logLinePrefab, logContent);
-            TextMeshProUGUI tmp = lineObj.GetComponent<TextMeshProUGUI>();
-            if (tmp != null) tmp.text = text;
-
-            logLines.Add(lineObj);
-
-            // Auto-scroll al fondo en el siguiente frame
-            Canvas.ForceUpdateCanvases();
-            if (scrollRect != null)
-                scrollRect.verticalNormalizedPosition = 0f;
-        }
-
-        private void AddSeparator()
-        {
-            AddLine("<color=#495057>────────────────────</color>");
+            extraInfo = $"<color={COLOR_INFO}>{message}</color>";
+            UpdateSummary();
         }
 
         public void ClearLog()
         {
-            foreach (var line in logLines) Destroy(line);
-            logLines.Clear();
+            playerAction = "";
+            enemyAction = "";
+            extraInfo = "";
+            UpdateSummary();
+        }
+
+        public void ClearTurnLog()
+        {
+            // Se llama al inicio de cada turno del jugador para borrar las acciones del turno anterior
+            playerAction = "";
+            enemyAction = "";
+            extraInfo = "";
+            UpdateSummary();
+        }
+
+        private void UpdateSummary()
+        {
+            if (turnSummaryText == null) return;
+
+            // Construimos el string mostrando solo las líneas que tienen texto
+            string finalString = "";
+
+            if (!string.IsNullOrEmpty(extraInfo))
+                finalString += extraInfo + "\n";
+            
+            if (!string.IsNullOrEmpty(playerAction))
+                finalString += playerAction + "\n";
+                
+            if (!string.IsNullOrEmpty(enemyAction))
+                finalString += enemyAction;
+
+            turnSummaryText.text = finalString.TrimEnd();
         }
     }
 }

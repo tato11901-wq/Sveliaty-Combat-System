@@ -18,7 +18,7 @@ public class BestiaryManager : MonoBehaviour
     [System.Serializable]
     public class EnemyBestiaryData
     {
-        public int enemyId;
+        public string enemyName;
         public bool hasEncountered;
         public bool hasDefeated;
         
@@ -29,9 +29,9 @@ public class BestiaryManager : MonoBehaviour
         // Flags binarios para afinidades (bit 0 = Fuerza, bit 1 = Agilidad, bit 2 = Destreza)
         public int affinitiesDiscovered;
 
-        public EnemyBestiaryData(int id)
+        public EnemyBestiaryData(string name)
         {
-            enemyId = id;
+            enemyName = name;
             hasEncountered = false;
             hasDefeated = false;
             tiersDiscovered = 0;
@@ -70,14 +70,14 @@ public class BestiaryManager : MonoBehaviour
     /// </summary>
     void RegisterEnemyEncounter(EnemyInstance enemy)
     {
-        int enemyId = enemy.enemyData.id;
+        string enemyName = enemy.enemyData.name;
         EnemyTier tier = enemy.enemyTierData.enemyTier;
 
         // Marcar como encontrado
-        SetEnemyEncountered(enemyId, true);
+        SetEnemyEncountered(enemyName, true);
         
         // Registrar tier descubierto
-        RegisterTierDiscovered(enemyId, tier);
+        RegisterTierDiscovered(enemyName, tier);
 
         Debug.Log("Bestiario: Enemigo " + enemy.enemyData.displayName + " (" + tier + ") registrado");
     }
@@ -94,14 +94,14 @@ public class BestiaryManager : MonoBehaviour
         if (combatManager == null || !combatManager.HasActiveEnemy()) return;
 
         EnemyInstance enemy = combatManager.GetCurrentEnemy();
-        int enemyId = enemy.enemyData.id;
+        string enemyName = enemy.enemyData.name;
         EnemyTier tier = enemy.enemyTierData.enemyTier;
 
         // Marcar como derrotado
-        SetEnemyDefeated(enemyId, true);
+        SetEnemyDefeated(enemyName, true);
         
         // Registrar tier derrotado
-        RegisterTierDefeated(enemyId, tier);
+        RegisterTierDefeated(enemyName, tier);
 
         Debug.Log("Bestiario: Enemigo " + enemy.enemyData.displayName + " (" + tier + ") derrotado");
     }
@@ -110,84 +110,84 @@ public class BestiaryManager : MonoBehaviour
     /// Registra que el jugador probo una afinidad contra un enemigo
     /// Llamar desde AffinityDiscoveryTracker cuando registra un descubrimiento
     /// </summary>
-    public void RegisterAffinityDiscovered(int enemyId, AffinityType affinity)
+    public void RegisterAffinityDiscovered(string enemyName, AffinityType affinity)
     {
-        int currentFlags = GetAffinitiesDiscovered(enemyId);
+        int currentFlags = GetAffinitiesDiscovered(enemyName);
         int affinityBit = AffinityToFlag(affinity);
         
         // Añadir flag si no existe
         if ((currentFlags & affinityBit) == 0)
         {
             currentFlags |= affinityBit;
-            SaveAffinitiesDiscovered(enemyId, currentFlags);
-            Debug.Log("Bestiario: Afinidad " + affinity + " descubierta para enemigo " + enemyId);
+            SaveAffinitiesDiscovered(enemyName, currentFlags);
+            Debug.Log("Bestiario: Afinidad " + affinity + " descubierta para enemigo " + enemyName);
         }
     }
 
     // ========== PLAYERPREFS - GETTERS ==========
 
-    public bool HasEncountered(int enemyId)
+    public bool HasEncountered(string enemyName)
     {
-        return PlayerPrefs.GetInt("Bestiary_Encountered_" + enemyId, 0) == 1;
+        return PlayerPrefs.GetInt("Bestiary_Encountered_" + enemyName, 0) == 1;
     }
 
-    public bool HasDefeated(int enemyId)
+    public bool HasDefeated(string enemyName)
     {
-        return PlayerPrefs.GetInt("Bestiary_Defeated_" + enemyId, 0) == 1;
+        return PlayerPrefs.GetInt("Bestiary_Defeated_" + enemyName, 0) == 1;
     }
 
-    public int GetTiersDiscovered(int enemyId)
+    public int GetTiersDiscovered(string enemyName)
     {
-        return PlayerPrefs.GetInt("Bestiary_TiersDiscovered_" + enemyId, 0);
+        return PlayerPrefs.GetInt("Bestiary_TiersDiscovered_" + enemyName, 0);
     }
 
-    public int GetTiersDefeated(int enemyId)
+    public int GetTiersDefeated(string enemyName)
     {
-        return PlayerPrefs.GetInt("Bestiary_TiersDefeated_" + enemyId, 0);
+        return PlayerPrefs.GetInt("Bestiary_TiersDefeated_" + enemyName, 0);
     }
 
-    public int GetAffinitiesDiscovered(int enemyId)
+    public int GetAffinitiesDiscovered(string enemyName)
     {
-        return PlayerPrefs.GetInt("Bestiary_Affinities_" + enemyId, 0);
+        return PlayerPrefs.GetInt("Bestiary_Affinities_" + enemyName, 0);
     }
 
     // ========== PLAYERPREFS - SETTERS ==========
 
-    void SetEnemyEncountered(int enemyId, bool value)
+    void SetEnemyEncountered(string enemyName, bool value)
     {
-        PlayerPrefs.SetInt("Bestiary_Encountered_" + enemyId, value ? 1 : 0);
+        PlayerPrefs.SetInt("Bestiary_Encountered_" + enemyName, value ? 1 : 0);
         PlayerPrefs.Save();
     }
 
-    void SetEnemyDefeated(int enemyId, bool value)
+    void SetEnemyDefeated(string enemyName, bool value)
     {
-        PlayerPrefs.SetInt("Bestiary_Defeated_" + enemyId, value ? 1 : 0);
+        PlayerPrefs.SetInt("Bestiary_Defeated_" + enemyName, value ? 1 : 0);
         PlayerPrefs.Save();
     }
 
-    void RegisterTierDiscovered(int enemyId, EnemyTier tier)
+    void RegisterTierDiscovered(string enemyName, EnemyTier tier)
     {
-        int currentFlags = GetTiersDiscovered(enemyId);
+        int currentFlags = GetTiersDiscovered(enemyName);
         int tierBit = TierToFlag(tier);
         currentFlags |= tierBit;
         
-        PlayerPrefs.SetInt("Bestiary_TiersDiscovered_" + enemyId, currentFlags);
+        PlayerPrefs.SetInt("Bestiary_TiersDiscovered_" + enemyName, currentFlags);
         PlayerPrefs.Save();
     }
 
-    void RegisterTierDefeated(int enemyId, EnemyTier tier)
+    void RegisterTierDefeated(string enemyName, EnemyTier tier)
     {
-        int currentFlags = GetTiersDefeated(enemyId);
+        int currentFlags = GetTiersDefeated(enemyName);
         int tierBit = TierToFlag(tier);
         currentFlags |= tierBit;
         
-        PlayerPrefs.SetInt("Bestiary_TiersDefeated_" + enemyId, currentFlags);
+        PlayerPrefs.SetInt("Bestiary_TiersDefeated_" + enemyName, currentFlags);
         PlayerPrefs.Save();
     }
 
-    void SaveAffinitiesDiscovered(int enemyId, int flags)
+    void SaveAffinitiesDiscovered(string enemyName, int flags)
     {
-        PlayerPrefs.SetInt("Bestiary_Affinities_" + enemyId, flags);
+        PlayerPrefs.SetInt("Bestiary_Affinities_" + enemyName, flags);
         PlayerPrefs.Save();
     }
 
@@ -196,9 +196,9 @@ public class BestiaryManager : MonoBehaviour
     /// <summary>
     /// Verifica si un tier especifico fue descubierto
     /// </summary>
-    public bool IsTierDiscovered(int enemyId, EnemyTier tier)
+    public bool IsTierDiscovered(string enemyName, EnemyTier tier)
     {
-        int flags = GetTiersDiscovered(enemyId);
+        int flags = GetTiersDiscovered(enemyName);
         int tierBit = TierToFlag(tier);
         return (flags & tierBit) != 0;
     }
@@ -206,9 +206,9 @@ public class BestiaryManager : MonoBehaviour
     /// <summary>
     /// Verifica si un tier especifico fue derrotado
     /// </summary>
-    public bool IsTierDefeated(int enemyId, EnemyTier tier)
+    public bool IsTierDefeated(string enemyName, EnemyTier tier)
     {
-        int flags = GetTiersDefeated(enemyId);
+        int flags = GetTiersDefeated(enemyName);
         int tierBit = TierToFlag(tier);
         return (flags & tierBit) != 0;
     }
@@ -216,9 +216,9 @@ public class BestiaryManager : MonoBehaviour
     /// <summary>
     /// Verifica si una afinidad fue descubierta
     /// </summary>
-    public bool IsAffinityDiscovered(int enemyId, AffinityType affinity)
+    public bool IsAffinityDiscovered(string enemyName, AffinityType affinity)
     {
-        int flags = GetAffinitiesDiscovered(enemyId);
+        int flags = GetAffinitiesDiscovered(enemyName);
         int affinityBit = AffinityToFlag(affinity);
         return (flags & affinityBit) != 0;
     }
@@ -226,13 +226,13 @@ public class BestiaryManager : MonoBehaviour
     /// <summary>
     /// Obtiene el multiplicador de afinidad si fue descubierto
     /// </summary>
-    public AffinityMultiplier GetDiscoveredAffinityMultiplier(int enemyId, AffinityType affinity)
+    public AffinityMultiplier GetDiscoveredAffinityMultiplier(string enemyName, AffinityType affinity)
     {
-        if (!IsAffinityDiscovered(enemyId, affinity))
+        if (!IsAffinityDiscovered(enemyName, affinity))
             return AffinityMultiplier.Neutral; // No descubierto = desconocido
 
         // Buscar en la base de datos
-        EnemyData enemy = enemyDatabase.GetEnemyById(enemyId);
+        EnemyData enemy = enemyDatabase.GetEnemyByName(enemyName);
         if (enemy == null) return AffinityMultiplier.Neutral;
 
         foreach (var relation in enemy.affinityRelations)
@@ -277,11 +277,12 @@ public class BestiaryManager : MonoBehaviour
 
         foreach (var enemy in enemyDatabase.allEnemies)
         {
-            PlayerPrefs.DeleteKey("Bestiary_Encountered_" + enemy.id);
-            PlayerPrefs.DeleteKey("Bestiary_Defeated_" + enemy.id);
-            PlayerPrefs.DeleteKey("Bestiary_TiersDiscovered_" + enemy.id);
-            PlayerPrefs.DeleteKey("Bestiary_TiersDefeated_" + enemy.id);
-            PlayerPrefs.DeleteKey("Bestiary_Affinities_" + enemy.id);
+            if (enemy == null) continue;
+            PlayerPrefs.DeleteKey("Bestiary_Encountered_" + enemy.name);
+            PlayerPrefs.DeleteKey("Bestiary_Defeated_" + enemy.name);
+            PlayerPrefs.DeleteKey("Bestiary_TiersDiscovered_" + enemy.name);
+            PlayerPrefs.DeleteKey("Bestiary_TiersDefeated_" + enemy.name);
+            PlayerPrefs.DeleteKey("Bestiary_Affinities_" + enemy.name);
         }
 
         PlayerPrefs.Save();
@@ -299,12 +300,13 @@ public class BestiaryManager : MonoBehaviour
 
         foreach (var enemy in enemyDatabase.allEnemies)
         {
-            Debug.Log("Enemigo: " + enemy.displayName + " (ID: " + enemy.id + ")");
-            Debug.Log("  Encontrado: " + HasEncountered(enemy.id));
-            Debug.Log("  Derrotado: " + HasDefeated(enemy.id));
-            Debug.Log("  Tiers descubiertos: " + GetTiersDiscovered(enemy.id));
-            Debug.Log("  Tiers derrotados: " + GetTiersDefeated(enemy.id));
-            Debug.Log("  Afinidades descubiertas: " + GetAffinitiesDiscovered(enemy.id));
+            if (enemy == null) continue;
+            Debug.Log("Enemigo: " + enemy.displayName + " (Name: " + enemy.name + ")");
+            Debug.Log("  Encontrado: " + HasEncountered(enemy.name));
+            Debug.Log("  Derrotado: " + HasDefeated(enemy.name));
+            Debug.Log("  Tiers descubiertos: " + GetTiersDiscovered(enemy.name));
+            Debug.Log("  Tiers derrotados: " + GetTiersDefeated(enemy.name));
+            Debug.Log("  Afinidades descubiertas: " + GetAffinitiesDiscovered(enemy.name));
         }
         
         Debug.Log("=====================");

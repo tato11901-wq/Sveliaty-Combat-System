@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b49902360aca114ca57cefec09dacb9, type: 3}
   m_Name: Ghoul
   m_EditorClassIdentifier: 
-  id: 7
   displayName: Ghoul
+  enemySprite: {fileID: 0}
   affinityType: 0
   affinityRelations:
   - type: 0
@@ -22,3 +22,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 22cf0e2b695be32488278ea5f5dc1c6a, type: 2}
   - {fileID: 11400000, guid: b6d0ecdd6fabf9d43b43acb4cc550044, type: 2}
   - {fileID: 11400000, guid: 5e115c0353131bd4aa02c49c7b66f2f7, type: 2}
+  isSpirit: 0

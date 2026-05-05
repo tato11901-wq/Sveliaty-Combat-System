@@ -4,7 +4,6 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Sveliaty/Card/Curse Data")]
 public class CurseData : ScriptableObject
 {
-    public int id;
     public string curseName;
     public string description;
     public CurseType type;

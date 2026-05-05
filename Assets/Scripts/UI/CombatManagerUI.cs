@@ -29,6 +29,11 @@ public class CombatUIManager : MonoBehaviour
     public TextMeshProUGUI dadosText;
     public TextMeshProUGUI vidaActualText;
 
+    [Header("Player Extra Stats (Armor, Lifesteal, Crit)")]
+    public TextMeshProUGUI armaduraJugadorText;
+    public Image armaduraJugadorFill;
+    public TextMeshProUGUI roboVidaText;
+
     [Header("Buttons - Modo Passive")]
     public GameObject passiveModePanel;
     public Button attackButton;
@@ -286,7 +291,7 @@ void AnimateButton(Button btn)
             panelToShow.SetActive(true);
             currentExpandedType = type;
             UpdateAbilityButtons(type);
-            combatManager.SelectAttackType(type);
+            // combatManager.SelectAttackType(type); // OBSOLETO
             
             // NUEVO: Ocultar botones principales y mostrar botón Volver
             HideMainButtons();
@@ -489,14 +494,7 @@ private void OnDisable()
         enemyNameText.text = enemy.enemyData.displayName;
         enemyTierText.text = enemy.enemyTierData.GetEnemyTier();
 
-        if (combatManager.GetCombatMode() == CombatMode.TraditionalRPG) 
-        {
-            vidaText.text = enemy.currentRPGHealth.ToString();
-        }
-        else 
-        {
-            vidaText.text = enemy.healthThreshold.ToString();
-        }
+        vidaText.text = enemy.currentRPGHealth.ToString();
 
         intentosText.text = enemy.attemptsRemaining.ToString();
         dadosText.text = enemy.diceCount.ToString();
@@ -512,6 +510,7 @@ private void OnDisable()
 
         UpdateCardsDisplay();
         UpdateAffinitiesUI();
+        UpdatePlayerExtraStatsUI();
 
         // NUEVO: Resetear estado de botones
         HideAllAbilityPanels();
@@ -563,18 +562,10 @@ private void OnDisable()
 
     string GetEscaladoText(EnemyInstance enemy)
     {
-        if (combatManager.GetCombatMode() == CombatMode.PlayerChooses || 
-            combatManager.GetCombatMode() == CombatMode.TraditionalRPG)
-        {
-            return " ";
-        }
-        else
-        {
-            return enemy.enemyData.affinityType.ToString();
-        }
+        return " ";
     }
 
-    void HandleAttackResult(int roll, int bonus, int total, float multiplier)
+    void HandleAttackResult(int roll, int bonus, int total, float multiplier, bool isCritical, float affinityMultiplier)
     {
         resultadoDadosText.text = roll.ToString();
         
@@ -583,11 +574,8 @@ private void OnDisable()
         
         resultadoAtaqueText.text = $"{total}{multText}";
         
-        if (combatManager.GetCombatMode() == CombatMode.TraditionalRPG)
-        {
-            EnemyInstance currentEnemy = combatManager.GetCurrentEnemy();
-            vidaText.text = Mathf.Max(0, currentEnemy.currentRPGHealth).ToString();
-        }
+        EnemyInstance currentEnemy = combatManager.GetCurrentEnemy();
+        vidaText.text = Mathf.Max(0, currentEnemy.currentRPGHealth).ToString();
         
         // --- GAME FEEL: Animación de impacto ---
         // 1. Efecto en la cámara/pantalla general
@@ -654,9 +642,7 @@ private void OnDisable()
             passiveCG.DOFade(1f, 0.6f).SetUpdate(true);
             passiveRT.DOAnchorPosY(originalY, 0.6f).SetEase(Ease.OutCubic).SetUpdate(true);
             
-            if (rewardCard == default && 
-                (combatManager.GetCombatMode() == CombatMode.PlayerChooses || 
-                 combatManager.GetCombatMode() == CombatMode.TraditionalRPG))
+            if (rewardCard == default)
             {
                  passiveEndMessageText.text = $"¡VICTORIA!\n\nPuntuación: {finalScore}\n\nNo explotaste la debilidad y no hubo suerte con el botín.";
             }
@@ -758,37 +744,29 @@ private void OnDisable()
 
     void UpdateModeUI()
     {
-        CombatMode mode = combatManager.GetCombatMode();
-
-        if (mode == CombatMode.Passive)
-        {
-            passiveModePanel.SetActive(true);
-            playerChoosePanel.SetActive(false);
-        }
-        else
-        {
-            passiveModePanel.SetActive(false);
-            playerChoosePanel.SetActive(true);
-        }
+        passiveModePanel.SetActive(false);
+        playerChoosePanel.SetActive(true);
 
         UpdateCardsDisplay();
         UpdateAffinitiesUI();
         UpdatePlayerLifeUI();
+        UpdatePlayerExtraStatsUI();
     }
 
     void UpdateCardsDisplay()
     {
-        if (combatManager.GetCombatMode() == CombatMode.Passive)
-        {
-            int currentCards = combatManager.GetCurrentCards();
-            cartasText.text = $"Tienes: {currentCards} muchas Cartas de {combatManager.GetCurrentEnemy().enemyData.affinityType}";
-        }
-        else
-        {
-            fuerzaMainText.text = $"ATACAR CON FUERZA\nCartas: {combatManager.GetCardsOfType(AffinityType.Fuerza)}";
-            agilidadMainText.text = $"ATACAR CON AGILIDAD\nCartas: {combatManager.GetCardsOfType(AffinityType.Agilidad)}";
-            destrezaMainText.text = $"ATACAR CON DESTREZA\nCartas: {combatManager.GetCardsOfType(AffinityType.Destreza)}";
-        }
+        int cardsF = combatManager.GetCardsOfType(AffinityType.Fuerza);
+        float itemF = combatManager.statsManager != null ? combatManager.statsManager.GetFinalStat(StatType.Fuerza, null) - cardsF : 0;
+        
+        int cardsA = combatManager.GetCardsOfType(AffinityType.Agilidad);
+        float itemA = combatManager.statsManager != null ? combatManager.statsManager.GetFinalStat(StatType.Velocidad, null) - cardsA : 0;
+        
+        int cardsD = combatManager.GetCardsOfType(AffinityType.Destreza);
+        float itemD = combatManager.statsManager != null ? combatManager.statsManager.GetFinalStat(StatType.Destreza, null) - cardsD : 0;
+
+        fuerzaMainText.text = $"ATACAR CON FUERZA\nPoder: {cardsF + itemF} (Cartas: {cardsF} + Items: {itemF})";
+        agilidadMainText.text = $"ATACAR CON AGILIDAD\nPoder: {cardsA + itemA} (Cartas: {cardsA} + Items: {itemA})";
+        destrezaMainText.text = $"ATACAR CON DESTREZA\nPoder: {cardsD + itemD} (Cartas: {cardsD} + Items: {itemD})";
     }
 
     void UpdateButtonColor(Button button, AffinityType type, EnemyData enemy)
@@ -805,7 +783,7 @@ private void OnDisable()
         bool isDiscovered = false;
         if (BestiaryManager.Instance != null)
         {
-            isDiscovered = BestiaryManager.Instance.IsAffinityDiscovered(enemy.id, type);
+            isDiscovered = BestiaryManager.Instance.IsAffinityDiscovered(enemy.name, type);
         }
 
         if (!isDiscovered)
@@ -836,23 +814,40 @@ private void OnDisable()
 
     public void UpdateAffinitiesUI()
     {
-        if (combatManager.GetCombatMode() == CombatMode.PlayerChooses || 
-            combatManager.GetCombatMode() == CombatMode.TraditionalRPG)
-        {
-            EnemyData enemy = combatManager.GetCurrentEnemy().enemyData;
-            UpdateButtonColor(fuerzaMainButton, AffinityType.Fuerza, enemy);
-            UpdateButtonColor(agilidadMainButton, AffinityType.Agilidad, enemy);
-            UpdateButtonColor(destrezaMainButton, AffinityType.Destreza, enemy);
-        }
+        EnemyData enemy = combatManager.GetCurrentEnemy().enemyData;
+        UpdateButtonColor(fuerzaMainButton, AffinityType.Fuerza, enemy);
+        UpdateButtonColor(agilidadMainButton, AffinityType.Agilidad, enemy);
+        UpdateButtonColor(destrezaMainButton, AffinityType.Destreza, enemy);
     }
 
     void UpdatePlayerLifeUI()
     {
-        if (vidaActualText != null)
+        if (vidaActualText != null && combatManager.playerManager != null)
         {
             int currentLife = combatManager.GetPlayerLife();
             int maxLife = combatManager.GetPlayerMaxLife();
             vidaActualText.text = $"Vida: {currentLife}/{maxLife}";
+        }
+    }
+
+    void UpdatePlayerExtraStatsUI()
+    {
+        if (combatManager.playerManager == null || combatManager.statsManager == null) return;
+
+        if (armaduraJugadorText != null)
+        {
+            armaduraJugadorText.text = combatManager.playerManager.ActiveArmor.ToString();
+        }
+        
+        // Asumiendo que Fill es de 0 a 1 basado en algo. Para la armadura podemos poner max 50 por ejemplo.
+        if (armaduraJugadorFill != null)
+        {
+            armaduraJugadorFill.fillAmount = Mathf.Clamp01(combatManager.playerManager.ActiveArmor / 50f);
+        }
+
+        if (roboVidaText != null)
+        {
+            roboVidaText.text = $"Robo de Vida: {combatManager.statsManager.GetFinalStat(StatType.RoboVida, null)}";
         }
     }
 

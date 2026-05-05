@@ -65,11 +65,22 @@ public class BasicAttackAction : CombatAction
         }
 
         // 3. Multiplicador de afinidad
-        float multiplier = manager.GetAffinityMultiplier(ActionAffinity);
+        float affinityMult = manager.GetAffinityMultiplier(ActionAffinity);
+        float multiplier = affinityMult;
 
         if (BestiaryManager.Instance != null)
         {
-            BestiaryManager.Instance.RegisterAffinityDiscovered(enemy.enemyData.id, ActionAffinity);
+            BestiaryManager.Instance.RegisterAffinityDiscovered(enemy.enemyData.name, ActionAffinity);
+        }
+
+        // --- GOLPE CRÍTICO ---
+        bool isCritical = false;
+        float critChance = manager.statsManager != null ? manager.statsManager.GetFinalStat(StatType.ProbCritico, null) : 5f;
+        if (UnityEngine.Random.Range(0f, 100f) < critChance)
+        {
+            isCritical = true;
+            multiplier *= 1.5f;
+            Debug.Log($"[{ActionName}] ¡GOLPE CRÍTICO!");
         }
 
         // 4. Daño final y Mitigación (Armadura del enemigo)
@@ -84,20 +95,33 @@ public class BasicAttackAction : CombatAction
             Debug.Log($"[{ActionName}] El enemigo mitigó {damageMitigated} de daño con su Armadura.");
         }
 
-        // 5. Daño reflejado (Espinas del enemigo)
+        // 5. Espinas
         if (enemy.activeThorns > 0 && totalFinal > 0)
         {
             int thornsDamage = Mathf.RoundToInt(totalFinal * enemy.activeThorns);
             if (thornsDamage > 0)
             {
                 manager.playerManager.ModifyHealth(-thornsDamage);
+                manager.NotifyHitReceived(thornsDamage); // <-- NOTIFICAR A LA UI
                 Debug.Log($"[{ActionName}] Espinas: Recibiste {thornsDamage} de daño devuelto.");
             }
         }
 
         // 6. Reportar resultado
-        manager.RegisterAttackResult(roll, Mathf.RoundToInt(statBonus), totalFinal, multiplier);
+        manager.RegisterAttackResult(roll, Mathf.RoundToInt(statBonus), totalFinal, multiplier, isCritical, affinityMult);
         
+        // --- ROBO DE VIDA ---
+        float lifesteal = manager.statsManager != null ? manager.statsManager.GetFinalStat(StatType.RoboVida, null) : 0f;
+        if (lifesteal > 0 && totalFinal > 0)
+        {
+            int healAmount = Mathf.Min(totalFinal, Mathf.RoundToInt(lifesteal));
+            if (healAmount > 0)
+            {
+                manager.playerManager.ModifyHealth(healAmount);
+                Debug.Log($"[{ActionName}] Robo de vida: Te curaste {healAmount} HP.");
+            }
+        }
+
         return true;
     }
 }

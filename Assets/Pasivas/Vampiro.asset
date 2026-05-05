@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2d88e2bc41a2234798fc5c69dd61c80, type: 3}
+  m_Name: Vampiro
+  m_EditorClassIdentifier: 
+  passiveName: Vampiro
+  description: 'Te curas 5 de vida al inicio de cada combate.
+
+    Contra: Pierdes
+    2 de vida al inicio de cada turno, sin importar tu armadura.'
+  profile: 0
+  icon: {fileID: 0}

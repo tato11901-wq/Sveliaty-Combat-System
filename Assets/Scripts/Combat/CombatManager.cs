@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Sveliaty.Passives;
 
 /// <summary>
 /// Gestor de los combates (Modo TraditionalRPG Exclusivamente).
@@ -23,8 +24,9 @@ public class CombatManager : MonoBehaviour
     // Estado del combate ACTUAL
     private EnemyInstance currentEnemy;
     private bool combatEnded = false;
-    private bool waitingForCardSelection = false;
+    private int pendingCardSelections = 0;
     private bool isProcessingPostCombat = false;
+    private bool isEliteRound = false; // Ronda élite (posición 5 en progresión, no el flag isSpirit del enemigo)
 
     // Estado del TURNO
     private TurnPhase currentPhase;
@@ -34,10 +36,11 @@ public class CombatManager : MonoBehaviour
 
     // === EVENTOS PARA LA UI ===
     public event Action<EnemyInstance> OnCombatStart;
-    public event Action<int, int, int, float> OnAttackResult;
+    public event Action<int, int, int, float, bool, float> OnAttackResult; // roll, bonus, total, multiplier, isCritical, affinityMult
     public event Action<bool, int, AffinityType, int> OnCombatEnd; 
     public event Action<int> OnAttemptsChanged;
     public event Action<int> OnWaitingForCardSelection;
+    public event Action<int> OnWaitingForPassiveSelection; // <--- AÑADIDO PARA PASIVAS
     public event Action<int, int, int, int, EnemyInstance> GameOver; 
 
     // === EVENTOS PARA PASIVAS ===
@@ -48,9 +51,24 @@ public class CombatManager : MonoBehaviour
     public event Action OnCombatEndEvent;
     public event Action<TurnContext> OnTurnStartEvent;
     public event Action OnEnemyTurnEvent;
+    public event Action OnEnemyHealedEvent; // <--- AÑADIDO
     public event Action<string> OnEnemyActionEvent; // Descripción de la acción del enemigo para el log
 
-    public void StartCombat(EnemyData enemyData, EnemyTier tier, CombatMode mode, float statsMultiplier = 1f)
+    public void SetEliteRound(bool isElite)
+    {
+        isEliteRound = isElite;
+    }
+
+    private void Start()
+    {
+        if (PassiveManager.Instance != null)
+        {
+            PassiveManager.Instance.RegisterCombatManager(this);
+            PassiveManager.Instance.RegisterPlayerManager(playerManager);
+        }
+    }
+
+    public void StartCombat(EnemyData enemyData, EnemyTier tier, CombatMode mode, float statsMultiplier = 1f, int extraAttempts = 0)
     {
         EnemyTierData tierData = GetTierData(enemyData, tier);
 
@@ -64,16 +82,29 @@ public class CombatManager : MonoBehaviour
         }
         
         currentEnemy = new EnemyInstance(enemyData, tierData);
-        if (statsMultiplier != 1f) currentEnemy.ApplyStatsMultiplier(statsMultiplier);
+        if (statsMultiplier != 1f || extraAttempts != 0) 
+            currentEnemy.ApplyStatsMultiplier(statsMultiplier, extraAttempts);
         
         combatEnded = false;
         isProcessingPostCombat = false;
+        isEliteRound = false;
         turnsUsedThisCombat = 0;
         currentTurnNumber = 0;
         currentPhase = TurnPhase.TurnEnd; 
 
+        if (playerManager != null && statsManager != null)
+        {
+            playerManager.SetArmor(Mathf.RoundToInt(statsManager.GetFinalStat(StatType.Armadura, null)));
+        }
+
         // Disparar Evento para pasivas
         OnCombatStartEvent?.Invoke();
+        
+        // Aplicar maldiciones de PreCombate
+        if (curseManager != null)
+        {
+            curseManager.OnPreCombat(currentEnemy);
+        }
 
         Debug.Log("COMBATE INICIADO: " + currentEnemy.enemyData.displayName + " (" + tierData.enemyTier + ")");
         OnCombatStart?.Invoke(currentEnemy);
@@ -96,9 +127,14 @@ public class CombatManager : MonoBehaviour
         {
             if (relation.type == attackType)
             {
+                if (PassiveManager.Instance != null && PassiveManager.Instance.IsFirstHitAlwaysSuperEffective())
+                {
+                    return PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(1.5f);
+                }
+
                 return relation.multiplier switch
                 {
-                    AffinityMultiplier.Weak => 1.5f,
+                    AffinityMultiplier.Weak => PassiveManager.Instance != null ? PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(1.5f) : 1.5f,
                     AffinityMultiplier.Neutral => 1f,
                     AffinityMultiplier.Strong => 0.5f,
                     AffinityMultiplier.Immune => 0f,
@@ -116,8 +152,13 @@ public class CombatManager : MonoBehaviour
         return total;
     }
 
-    public void RegisterAttackResult(int roll, int statBonus, int totalFinal, float multiplier)
+    public void RegisterAttackResult(int roll, int statBonus, int totalFinal, float multiplier, bool isCritical = false, float affinityMultiplier = 1f)
     {
+        if (PassiveManager.Instance != null)
+        {
+            totalFinal = PassiveManager.Instance.GetModifiedDamageDealt(totalFinal);
+        }
+
         OnDamageResolveEvent?.Invoke(currentTurnContext.UsedAction, totalFinal);
 
         bool victory = false;
@@ -131,12 +172,17 @@ public class CombatManager : MonoBehaviour
             EndCombat(true, playerManager.GetScore(), multiplier);
         }
 
-        OnAttackResult?.Invoke(roll, statBonus, totalFinal, multiplier);
+        OnAttackResult?.Invoke(roll, statBonus, totalFinal, multiplier, isCritical, affinityMultiplier);
     }
     
     public void NotifyAttemptsChanged()
     {
         OnAttemptsChanged?.Invoke(currentEnemy.attemptsRemaining);
+    }
+
+    public void NotifyHitReceived(int damage)
+    {
+        OnHitReceivedEvent?.Invoke(damage);
     }
 
     public void PlayerAttempt(CombatAction action)
@@ -155,6 +201,12 @@ public class CombatManager : MonoBehaviour
         
         // Evento de pasivas
         OnTurnStartEvent?.Invoke(currentTurnContext);
+
+        // Aplicar maldiciones de inicio de turno
+        if (curseManager != null)
+        {
+            curseManager.OnTurnStart();
+        }
 
         // === FASE 2: SELECCIÓN DE ACCIÓN ===
         currentPhase = TurnPhase.ActionSelection;
@@ -187,6 +239,11 @@ public class CombatManager : MonoBehaviour
 
     public void PlayerAttempt(AbilityData ability)
     {
+        if (PassiveManager.Instance != null && !PassiveManager.Instance.CanUseAbility())
+        {
+            Debug.Log("[Pasivas] Uso de habilidades bloqueado.");
+            return;
+        }
         PlayerAttempt(new AbilityAction(ability));
     }
     
@@ -216,6 +273,17 @@ public class CombatManager : MonoBehaviour
         // Si el combate no terminó, procedemos al turno del enemigo
         if (!combatEnded)
         {
+            currentPhase = TurnPhase.EnemyTurn; // Bloquea la UI para evitar spam de clicks
+            StartCoroutine(ProcessEnemyTurnDelayed());
+        }
+    }
+
+    private System.Collections.IEnumerator ProcessEnemyTurnDelayed()
+    {
+        // Esperamos 0.6s para que la barra de vida baje visualmente antes de que el enemigo se cure u otra acción
+        yield return new WaitForSeconds(0.6f);
+        if (!combatEnded)
+        {
             ProcessEnemyTurn();
         }
     }
@@ -240,10 +308,11 @@ public class CombatManager : MonoBehaviour
         {
             int healAmount = UnityEngine.Random.Range(10, 25);
             currentEnemy.currentRPGHealth += healAmount;
-            if (currentEnemy.currentRPGHealth > currentEnemy.enemyTierData.RPGLife) 
-                currentEnemy.currentRPGHealth = currentEnemy.enemyTierData.RPGLife;
+            if (currentEnemy.currentRPGHealth > currentEnemy.maxRPGHealth) 
+                currentEnemy.currentRPGHealth = currentEnemy.maxRPGHealth;
             actionDescription = $"Se cura {healAmount} de vida. (HP: {currentEnemy.currentRPGHealth})";
             Debug.Log($"El enemigo se curó {healAmount} de vida.");
+            OnEnemyHealedEvent?.Invoke();
         }
         else if (randomVal < data.healChance + data.armorChance)
         {
@@ -272,6 +341,8 @@ public class CombatManager : MonoBehaviour
 
         OnEnemyActionEvent?.Invoke(actionDescription);
         Debug.Log("--- FIN DEL TURNO (Ronda Completada) ---");
+        
+        currentPhase = TurnPhase.TurnEnd; // Desbloqueamos la UI para el próximo turno
     }
 
     public void EndCombat(bool victory, int finalScore, float lastMultiplier)
@@ -282,6 +353,11 @@ public class CombatManager : MonoBehaviour
         combatEnded = true;
 
         OnCombatEndEvent?.Invoke();
+
+        if (curseManager != null)
+        {
+            curseManager.OnPostCombat(victory);
+        }
 
         // Iniciamos la corrutina para darle tiempo a la UI de animar la vida bajando a 0
         StartCoroutine(ProcessEndCombatDelay(victory, finalScore, lastMultiplier));
@@ -305,23 +381,75 @@ public class CombatManager : MonoBehaviour
             playerManager.RegisterEnemyDefeated();
             playerManager.RegisterCombatWon();
 
-            if (lastMultiplier >= 1.5f) 
+            // === CÁLCULO DE RECOMPENSA DE TINTA (Según GDD) ===
+            int inkReward = 15;
+            switch(currentEnemy.enemyTierData.enemyTier)
             {
-                waitingForCardSelection = true;
-                OnWaitingForCardSelection?.Invoke(finalScore);
+                case EnemyTier.Tier_1: inkReward = 15; break;
+                case EnemyTier.Tier_2: inkReward = 25; break;
+                case EnemyTier.Tier_3: inkReward = 40; break;
             }
-            else 
+
+            // Escala con el multiplicador de stats del enemigo (si la vida fue multiplicada)
+            float statsMultiplier = (float)currentEnemy.maxRPGHealth / currentEnemy.enemyTierData.RPGLife;
+            if (statsMultiplier > 0f) inkReward = Mathf.RoundToInt(inkReward * statsMultiplier);
+
+            // Enemigos élite dan 50% más de tinta
+            if (currentEnemy.enemyData.isSpirit) inkReward = Mathf.RoundToInt(inkReward * 1.5f);
+
+            // Bonus por explotar debilidad (rendimiento en combate)
+            bool wasSuperEffective = lastMultiplier > 1f;
+            if (wasSuperEffective) inkReward += 10;
+            
+            if (PassiveManager.Instance != null)
             {
-                if (UnityEngine.Random.Range(0, 100) < randomCardChance)
+                inkReward = PassiveManager.Instance.GetModifiedInkReward(inkReward, currentEnemy.enemyData.isSpirit);
+            }
+            
+            playerManager.AddInk(inkReward);
+
+            int randomCardsToGive = wasSuperEffective ? 1 : 0;
+            int choiceCardsToGive = wasSuperEffective ? 1 : 0;
+
+            if (PassiveManager.Instance != null)
+            {
+                PassiveManager.Instance.GetModifiedCardRewardAmount(ref randomCardsToGive, ref choiceCardsToGive, wasSuperEffective);
+            }
+
+            if (!wasSuperEffective)
+            {
+                float prob = PassiveManager.Instance != null ? PassiveManager.Instance.GetModifiedCardRewardProb(randomCardChance) : randomCardChance;
+                if (UnityEngine.Random.Range(0f, 100f) < prob)
+                {
+                    randomCardsToGive++;
+                }
+            }
+
+            // Entregar cartas aleatorias
+            if (randomCardsToGive > 0)
+            {
+                for (int i = 0; i < randomCardsToGive; i++)
                 {
                     rewardCard = GetRandomAffinityType();
                     playerManager.AddCards(rewardCard, 1);
-                    OnCombatEnd?.Invoke(true, finalScore, rewardCard, 0);
                 }
-                else
-                {
-                    OnCombatEnd?.Invoke(true, finalScore, default, 0); 
-                }
+                if (wasSuperEffective) OnEnemyActionEvent?.Invoke($"¡DEBILIDAD EXPLOTADA! Ganas {randomCardsToGive} carta(s) aleatoria(s).");
+                Debug.Log($"Otorgadas {randomCardsToGive} cartas aleatorias.");
+            }
+
+            // Entregar elecciones
+            pendingCardSelections = choiceCardsToGive;
+            Debug.Log($"[CombatManager] Victoria procesada. pendingCardSelections={pendingCardSelections}, isSpirit={currentEnemy.enemyData.isSpirit}, wasSuperEffective={wasSuperEffective}");
+            
+            if (isEliteRound && OnWaitingForPassiveSelection != null)
+            {
+                // Solo pausar para elegir pasiva si la UI está en escena (hay suscriptores)
+                Debug.Log("[CombatManager] Élite de ronda derrotado. Disparando selección de pasiva.");
+                OnWaitingForPassiveSelection?.Invoke(finalScore);
+            }
+            else
+            {
+                ContinueToCardSelection(finalScore);
             }
         }
         else
@@ -373,10 +501,43 @@ public class CombatManager : MonoBehaviour
 
     public void SelectRewardCard(AffinityType selectedCard)
     {
-        if (!waitingForCardSelection) return;
+        if (pendingCardSelections <= 0) return;
         playerManager.AddCards(selectedCard, 1);
-        waitingForCardSelection = false;
-        OnCombatEnd?.Invoke(true, playerManager.GetScore(), selectedCard, 0);
+        pendingCardSelections--;
+        
+        if (pendingCardSelections <= 0)
+        {
+            OnCombatEnd?.Invoke(true, playerManager.GetScore(), selectedCard, 0);
+        }
+        else
+        {
+            // Aún quedan elecciones, abrimos de nuevo el selector
+            OnWaitingForCardSelection?.Invoke(playerManager.GetScore());
+        }
+    }
+
+    public void SelectPassive(PassiveSkill selectedPassive)
+    {
+        if (PassiveManager.Instance != null && selectedPassive != null)
+        {
+            PassiveManager.Instance.EquipPassive(selectedPassive);
+        }
+        ContinueToCardSelection(playerManager.GetScore());
+    }
+
+    public void ContinueToCardSelection(int score)
+    {
+        Debug.Log($"[CombatManager] ContinueToCardSelection. pendingCardSelections={pendingCardSelections}, score={score}");
+        if (pendingCardSelections > 0)
+        {
+            Debug.Log("[CombatManager] Disparando OnWaitingForCardSelection");
+            OnWaitingForCardSelection?.Invoke(score);
+        }
+        else 
+        {
+            Debug.Log("[CombatManager] Disparando OnCombatEnd (victoria)");
+            OnCombatEnd?.Invoke(true, score, default, 0); 
+        }
     }
 
     AffinityType GetRandomAffinityType()

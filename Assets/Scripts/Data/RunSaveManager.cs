@@ -52,7 +52,7 @@ public class RunSaveManager : MonoBehaviour
         
         // Estado del combate actual (si existe)
         public bool isInCombat;
-        public int currentEnemyId;
+        public string currentEnemyName; // Usamos name en lugar de id
         public string currentEnemyTierString;
         public int currentEnemyAttemptsRemaining;
         public int currentEnemyRPGHealth; // Para modo RPG
@@ -108,7 +108,7 @@ public class RunSaveManager : MonoBehaviour
             EnemyInstance currentEnemy = combatManager.GetCurrentEnemy();
             
             saveData.isInCombat = true;
-            saveData.currentEnemyId = currentEnemy.enemyData.id;
+            saveData.currentEnemyName = currentEnemy.enemyData.name;
             saveData.currentEnemyTierString = currentEnemy.enemyTierData.enemyTier.ToString();
             saveData.currentEnemyAttemptsRemaining = currentEnemy.attemptsRemaining;
             saveData.currentEnemyRPGHealth = currentEnemy.currentRPGHealth;
@@ -229,10 +229,10 @@ public class RunSaveManager : MonoBehaviour
             return;
         }
 
-        EnemyData enemyData = enemyDB.GetEnemyById(saveData.currentEnemyId);
+        EnemyData enemyData = enemyDB.GetEnemyByName(saveData.currentEnemyName);
         if (enemyData == null)
         {
-            Debug.LogError("Enemigo con ID " + saveData.currentEnemyId + " no encontrado");
+            Debug.LogError("Enemigo con nombre " + saveData.currentEnemyName + " no encontrado");
             bossRushManager.StartNextCombat();
             return;
         }

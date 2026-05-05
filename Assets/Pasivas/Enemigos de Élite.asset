@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f59d2234dfed78f4d966446b0788befc, type: 3}
+  m_Name: "Enemigos de \xC9lite"
+  m_EditorClassIdentifier: 
+  passiveName: "Escalado de \xC9lite"
+  description: "Siempre recibes recompensa de carta cuando ganas y puedes elegir
+    2 recompensas si el ataque fue S\xFAper Efectivo.\nContra: Los enemigos escalan
+    un 50% m\xE1s r\xE1pido."
+  profile: 0
+  icon: {fileID: 0}

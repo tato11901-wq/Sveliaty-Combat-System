@@ -11,6 +11,7 @@ public class EnemyInstance
 
     public int attemptsRemaining; // Intentos restantes para derrotar al enemigo
     public int currentRPGHealth; // Vida actual en modo RPG Tradicional
+    public int maxRPGHealth; // Vida maxima en modo RPG Tradicional
     public int currentRPGDiceCount; // Cantidad de dados actuales en modo RPG Tradicional
 
     // Buffs activos del enemigo
@@ -30,14 +31,21 @@ public class EnemyInstance
 
         attemptsRemaining = tierData.maximunDiceThrow;
         currentRPGHealth = tierData.RPGLife;
+        maxRPGHealth = tierData.RPGLife;
         currentRPGDiceCount = tierData.RPGDiceCount;
     }
 
-    // Método para multiplicar stats si es boss, en vez de alterar el ScriptableObject
-    public void ApplyStatsMultiplier(float multiplier)
+    public void ApplyStatsMultiplier(float multiplier, int extraAttempts = 0)
     {
         healthThreshold = UnityEngine.Mathf.RoundToInt(healthThreshold * multiplier);
         currentRPGHealth = UnityEngine.Mathf.RoundToInt(currentRPGHealth * multiplier);
+        maxRPGHealth = currentRPGHealth;
+
+        // Escalar el daño que hace el enemigo al fallar un combate
+        failureDamage = UnityEngine.Mathf.RoundToInt(failureDamage * multiplier);
+
+        // Aplicar intentos extra (controlado por el gestor de progresión)
+        attemptsRemaining += extraAttempts;
     }
 
     /// <summary>

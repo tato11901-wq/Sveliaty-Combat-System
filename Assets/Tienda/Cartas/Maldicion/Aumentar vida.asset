@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb13d52ba97f6624a9acc67f9df3c4e1, type: 3}
   m_Name: Aumentar vida
   m_EditorClassIdentifier: 
-  id: 14
   curseName: Aumentar Vida Maxima
   description: Tu vida maxima aumenta en 5 puntos
   type: 0

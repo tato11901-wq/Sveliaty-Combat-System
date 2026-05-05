@@ -8,8 +8,8 @@ public class AbilityManager : MonoBehaviour
     public AbilityDatabase abilityDatabase;
     public PlayerManager playerManager;
     
-    // Habilidades desbloqueadas y sus Tiers (id -> tier actual, 0 = no poseída)
-    private Dictionary<int, int> abilityTiers = new Dictionary<int, int>();
+    // Habilidades desbloqueadas y sus Tiers (nombre -> tier actual, 0 = no poseída)
+    private Dictionary<string, int> abilityTiers = new Dictionary<string, int>();
     
     // Sistema de gasto de cartas (configurable)
     public enum CardSpendingMode 
@@ -37,7 +37,7 @@ public class AbilityManager : MonoBehaviour
         foreach (var ability in abilityDatabase.allAbilities)
         {
             if (ability.isBasicAbility)
-                abilityTiers[ability.id] = 1;
+                abilityTiers[ability.name] = 1;
         }
         
         // Inicializar tracking
@@ -51,7 +51,7 @@ public class AbilityManager : MonoBehaviour
     public List<AbilityData> GetAvailableAbilities(AffinityType type)
     {
         return abilityDatabase.GetAbilitiesByAffinity(type)
-            .Where(a => abilityTiers.ContainsKey(a.id) && abilityTiers[a.id] > 0)
+            .Where(a => abilityTiers.ContainsKey(a.name) && abilityTiers[a.name] > 0)
             .ToList();
     }
     
@@ -108,15 +108,15 @@ public class AbilityManager : MonoBehaviour
     /// </summary>
     public void UnlockOrUpgradeAbility(AbilityData ability)
     {
-        if (!abilityTiers.ContainsKey(ability.id) || abilityTiers[ability.id] == 0)
+        if (!abilityTiers.ContainsKey(ability.name) || abilityTiers[ability.name] == 0)
         {
-            abilityTiers[ability.id] = 1;
+            abilityTiers[ability.name] = 1;
             Debug.Log($"Habilidad desbloqueada: {ability.abilityName} (Tier 1)");
         }
-        else if (abilityTiers[ability.id] < 3)
+        else if (abilityTiers[ability.name] < 3)
         {
-            abilityTiers[ability.id]++;
-            Debug.Log($"Habilidad mejorada: {ability.abilityName} → Tier {abilityTiers[ability.id]}");
+            abilityTiers[ability.name]++;
+            Debug.Log($"Habilidad mejorada: {ability.abilityName} → Tier {abilityTiers[ability.name]}");
         }
         else
         {
@@ -128,7 +128,7 @@ public class AbilityManager : MonoBehaviour
     public int GetAbilityTier(AbilityData ability)
     {
         if (ability == null) return 0;
-        return abilityTiers.TryGetValue(ability.id, out int tier) ? tier : 0;
+        return abilityTiers.TryGetValue(ability.name, out int tier) ? tier : 0;
     }
 
     /// <summary>Cantidad de habilidades no-básicas poseídas en la rama (para límite GDD).</summary>
@@ -137,7 +137,7 @@ public class AbilityManager : MonoBehaviour
         int count = 0;
         foreach (var ability in abilityDatabase.GetAbilitiesByAffinity(branch))
         {
-            if (!ability.isBasicAbility && abilityTiers.TryGetValue(ability.id, out int t) && t > 0)
+            if (!ability.isBasicAbility && abilityTiers.TryGetValue(ability.name, out int t) && t > 0)
                 count++;
         }
         return count;

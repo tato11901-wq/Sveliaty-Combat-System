@@ -133,6 +133,7 @@ namespace Sveliaty.UI.V2
         public void OnCloseShopClicked()
         {
             shopPanel?.SetActive(false);
+            shopManager?.CloseShop();
         }
 
         // ── Display de recursos ────────────────────────────────────────────

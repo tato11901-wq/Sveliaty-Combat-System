@@ -66,6 +66,27 @@ namespace Sveliaty.UI.V2
         }
 
         /// <summary>
+        /// Configura la carta como una recompensa visual básica sin necesidad de un AbilityData.
+        /// </summary>
+        public void SetupReward(AffinityType affinity)
+        {
+            if (cardBackground != null)
+                cardBackground.sprite = GetBackgroundForAffinity(affinity);
+
+            if (abilityIcon != null)
+                abilityIcon.enabled = false;
+
+            if (nameText != null)
+                nameText.text = $"Carta de {affinity}";
+
+            if (descText != null)
+                descText.text = $"+1 Punto pasivo de {affinity}";
+
+            if (costText != null)
+                costText.text = "Recompensa";
+        }
+
+        /// <summary>
         /// Actualiza solo el contador de cartas disponibles (para los deck selectors).
         /// </summary>
         public void UpdateCount(int count)

@@ -12,16 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb13d52ba97f6624a9acc67f9df3c4e1, type: 3}
   m_Name: Fortalezer Enemigo
   m_EditorClassIdentifier: 
-  id: 12
   curseName: Fortalecer enemigo
-  description: "El enemigo se vuelve un poco m\xE1s fuerte"
+  description: El enemigo inicia con 5 de armadura
   type: 1
   icon: {fileID: 0}
   activationType: 1
   requiresPlayerActivation: 0
   mustActivateOnTurnOne: 0
-  effectType: 3
-  effectValue: 1
+  effectType: 11
+  effectValue: 5
   duration: 0
   passiveOnly: 0
   rpgOnly: 0

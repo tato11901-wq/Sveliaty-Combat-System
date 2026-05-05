@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Sveliaty.Passives;
 
 /// <summary>
 /// Gestor centralizado de todos los datos y estado del jugador
@@ -38,6 +39,8 @@ public class PlayerManager : MonoBehaviour
     public event Action<AffinityType, int> OnCardsChanged; // (type, newAmount)
     public event Action<int> OnScoreChanged; // (newScore)
     public event Action<int> OnInkChanged;   // (newInkAmount)
+    public event Action<int> OnArmorChanged; // (newArmorAmount)
+    public event Action<int> OnDamageTakenEvent; // (damageAmount)
     public event Action OnPlayerDeath;
 
     void Awake()
@@ -60,6 +63,7 @@ public class PlayerManager : MonoBehaviour
     {
         // Resetear vida
         currentLife = maxLife;
+        activeArmor = 0;
 
         // Resetear cartas
         cartasFuerza = 0;
@@ -100,8 +104,27 @@ public class PlayerManager : MonoBehaviour
     /// </summary>
     public void ModifyHealth(int amount)
     {
+        int finalAmount = amount;
+
+        // Mitigación de armadura si el amount es negativo (daño)
+        if (amount < 0 && activeArmor > 0)
+        {
+            int damage = -amount;
+            int mitigated = Mathf.Min(activeArmor, damage);
+            activeArmor -= mitigated;
+            damage -= mitigated;
+            finalAmount = -damage;
+            OnArmorChanged?.Invoke(activeArmor);
+            Debug.Log($"Armadura mitigó {mitigated} de daño. Armadura restante: {activeArmor}");
+        }
+
+        if (finalAmount < 0)
+        {
+            OnDamageTakenEvent?.Invoke(-finalAmount);
+        }
+
         int previousLife = currentLife;
-        currentLife += amount;
+        currentLife += finalAmount;
         currentLife = Mathf.Clamp(currentLife, 0, maxLife);
 
         Debug.Log("Vida modificada: " + amount + " (de " + previousLife + " a " + currentLife + ")");
@@ -113,6 +136,12 @@ public class PlayerManager : MonoBehaviour
             Debug.Log("Jugador muerto");
             OnPlayerDeath?.Invoke();
         }
+    }
+
+    public void SetArmor(int value)
+    {
+        activeArmor = Mathf.Max(0, value);
+        OnArmorChanged?.Invoke(activeArmor);
     }
 
     /// <summary>
@@ -164,6 +193,11 @@ public class PlayerManager : MonoBehaviour
     public void AddCards(AffinityType type, int amount)
     {
         if (amount <= 0) return;
+        if (Sveliaty.Passives.PassiveManager.Instance != null && !Sveliaty.Passives.PassiveManager.Instance.CanGainCards())
+        {
+            Debug.Log("[Pasiva] Ganancia de cartas bloqueada.");
+            return;
+        }
 
         switch (type)
         {
@@ -310,6 +344,9 @@ public class PlayerManager : MonoBehaviour
 
     // ========== GETTERS ==========
 
+    private int activeArmor = 0;
+    public int ActiveArmor => activeArmor;
+
     public int GetCurrentLife() => currentLife;
     public int GetMaxLife() => maxLife;
     public int GetScore() => score;
@@ -317,6 +354,14 @@ public class PlayerManager : MonoBehaviour
     public int GetCombatsWon() => combatsWon;
     public int GetCombatsLost() => combatsLost;
     public int GetInk() => inkAmount;
+
+    public IReadOnlyList<PassiveSkill> GetActivePassives()
+    {
+        if (PassiveManager.Instance != null)
+            return PassiveManager.Instance.ActivePassives;
+        
+        return new List<PassiveSkill>();
+    }
 
     public void AddInk(int amount)
     {

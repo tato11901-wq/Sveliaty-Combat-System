@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb13d52ba97f6624a9acc67f9df3c4e1, type: 3}
   m_Name: Cura 1
   m_EditorClassIdentifier: 
-  id: 1
   curseName: Curacion
   description: Regenaras 1 punto de vida
   type: 0

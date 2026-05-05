@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b49902360aca114ca57cefec09dacb9, type: 3}
   m_Name: Ciclope
   m_EditorClassIdentifier: 
-  id: 2
   displayName: Ciclope Perezoso
+  enemySprite: {fileID: 0}
   affinityType: 0
   affinityRelations:
   - type: 0
@@ -22,3 +22,4 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 48e861f444718304abe6969a3f6e03a9, type: 2}
   - {fileID: 11400000, guid: f23c87573b009a74f816736687f0adec, type: 2}
   - {fileID: 11400000, guid: a34e6013ef15e5240884453efa4a7b74, type: 2}
+  isSpirit: 0

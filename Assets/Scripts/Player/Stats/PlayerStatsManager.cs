@@ -29,9 +29,9 @@ public class PlayerStatsManager : MonoBehaviour
     {
         stats = new Dictionary<StatType, CharacterStat>
         {
-            { StatType.Fuerza, new CharacterStat(10f) },      // Valores base iniciales, pueden ser parametrizados
-            { StatType.Velocidad, new CharacterStat(10f) },
-            { StatType.Destreza, new CharacterStat(10f) },
+            { StatType.Fuerza, new CharacterStat(0f) },      // Valores base iniciales
+            { StatType.Velocidad, new CharacterStat(0f) },
+            { StatType.Destreza, new CharacterStat(0f) },
             { StatType.Armadura, new CharacterStat(0f) },
             { StatType.ProbCritico, new CharacterStat(5f) },
             { StatType.RoboVida, new CharacterStat(0f) }
@@ -162,6 +162,17 @@ public class PlayerStatsManager : MonoBehaviour
         }
 
         return (float)System.Math.Round(finalValue, 4);
+    }
+
+    /// <summary>
+    /// Devuelve solo el bonus acumulado de ítems para una estadística (sin cartas, sin base).
+    /// </summary>
+    public float GetItemBonus(StatType statType)
+    {
+        if (!stats.ContainsKey(statType)) return 0f;
+        // stats[statType].Value ya incluye base + items.
+        // El base de Fuerza/Velocidad/Destreza es 0, así que Value = puro items.
+        return stats[statType].Value;
     }
 
     /// <summary>

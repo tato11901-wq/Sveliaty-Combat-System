@@ -33,17 +33,17 @@ public class EnemyDatabase : ScriptableObject
     }
 
     /// <summary>
-    /// Busca un enemigo por ID
+    /// Busca un enemigo por su nombre (name del ScriptableObject)
     /// </summary>
-    public EnemyData GetEnemyById(int id)
+    public EnemyData GetEnemyByName(string enemyName)
     {
         foreach (var enemy in allEnemies)
         {
-            if (enemy.id == id)
+            if (enemy != null && enemy.name == enemyName)
                 return enemy;
         }
 
-        Debug.LogWarning("Enemigo con ID " + id + " no encontrado");
+        Debug.LogWarning("Enemigo con nombre " + enemyName + " no encontrado");
         return null;
     }
 
