@@ -48,6 +48,7 @@ namespace Sveliaty.UI.V2
 
             gameObject.SetActive(true);
             if (purchasedOverlay != null) purchasedOverlay.enabled = false;
+            if (buyButtonText != null) buyButtonText.text = "Comprar";
 
             buyButton?.onClick.RemoveAllListeners();
 
@@ -79,6 +80,7 @@ namespace Sveliaty.UI.V2
 
             SetBadge("ÍTEM", itemColor);
         }
+
 
         private void SetupAbilitySlot(ShopSlot slot)
         {

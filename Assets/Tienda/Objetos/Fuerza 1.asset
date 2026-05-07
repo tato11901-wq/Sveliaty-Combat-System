@@ -12,14 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9d4ab935c45d4745afac78e263bf81f, type: 3}
   m_Name: Fuerza 1
   m_EditorClassIdentifier: 
-  itemName: Fuerza
-  description: 
+  itemName: Guantes del Carcelero
+  description: "Pesados guantes reforzados con placas met\xE1licas. Cada golpe es
+    brutal, aunque el peso ralentiza los movimientos del portador.\n\n+3 Fuerza\n-2
+    Velocidad\n+5 Armadura"
   icon: {fileID: 0}
   baseInkPrice: 50
-  deltaFuerza: 2
-  deltaVelocidad: 0
-  deltaDestreza: -1
-  deltaArmadura: 1
+  deltaFuerza: 3
+  deltaVelocidad: -2
+  deltaDestreza: 0
+  deltaArmadura: 5
   deltaProbCritico: 0
   deltaRoboVida: 0
   appearanceWeight: 1

@@ -22,6 +22,9 @@ public class BossRushManager : MonoBehaviour
     public PlayerManager playerManager;
     public EnemyDatabase enemyDatabase;
 
+    [Tooltip("Base de datos exclusiva de enemigos élite. Si se asigna, los nodos Boss usan élites en lugar de enemigos normales T3.")]
+    public EliteEnemyDatabase eliteDatabase;
+
     [Header("Boss Rush Settings")]
     public CombatMode defaultMode = CombatMode.TraditionalRPG;
     
@@ -154,7 +157,29 @@ public class BossRushManager : MonoBehaviour
         }
 
         bool isBoss = (nextNode == NodeType.Boss);
-        
+
+        // ── Ruta élite ────────────────────────────────────────────────────────
+        if (isBoss && eliteDatabase != null && eliteDatabase.allElites != null && eliteDatabase.allElites.Count > 0)
+        {
+            int eliteTier  = UnityEngine.Mathf.Clamp(elitesDefeated + 1, 1, 4);
+            EliteEnemyData eliteData = eliteDatabase.GetRandom();
+
+            int eliteExtraAttempts = 0;
+            if (Sveliaty.Passives.PassiveManager.Instance != null)
+                eliteExtraAttempts = Sveliaty.Passives.PassiveManager.Instance.GetModifiedAttempts(eliteExtraAttempts);
+
+            if (currentNodeIndex >= maxEnemiesPerRun - 1)
+                Debug.Log($"BOSS FINAL (Élite Tier {eliteTier}): {eliteData.displayName}");
+            else
+                Debug.Log($"BOSS DE ZONA (Élite Tier {eliteTier}): {eliteData.displayName}");
+
+            combatManager.StartEliteCombat(eliteData, eliteTier, eliteExtraAttempts);
+            combatManager.SetEliteRound(true);
+            return;
+        }
+
+
+        // ── Ruta normal (fallback o sin eliteDatabase) ────────────────────────
         EnemyData enemyData;
         EnemyTier tier;
 

@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9d4ab935c45d4745afac78e263bf81f, type: 3}
   m_Name: Destreza 1
   m_EditorClassIdentifier: 
-  itemName: Fuerza
-  description: 
+  itemName: "M\xE1scara del Acr\xF3bata Ciego"
+  description: "Una m\xE1scara ligera cubierta por vendas oscuras. Obliga al portador
+    a confiar \xFAnicamente en sus reflejos; cada golpe preciso parece arrancar vitalidad
+    del enemigo.\n\n-1 Fuerza\n+3 Destreza\n+1 Robo de vida"
   icon: {fileID: 0}
-  baseInkPrice: 50
+  baseInkPrice: 30
   deltaFuerza: -1
   deltaVelocidad: 0
-  deltaDestreza: 2
-  deltaArmadura: 1
+  deltaDestreza: 3
+  deltaArmadura: 0
   deltaProbCritico: 0
-  deltaRoboVida: 0
+  deltaRoboVida: 1
   appearanceWeight: 1
   minShopVisit: 0

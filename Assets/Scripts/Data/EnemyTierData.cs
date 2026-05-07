@@ -4,43 +4,73 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Sveliaty/Enemy/Enemy Tier Data")]
 public class EnemyTierData : ScriptableObject
 {
-    public EnemyTier enemyTier; // Tier del enemigo
-    
-    public Sprite sprite; // Sprite representativo del enemigo
+    public EnemyTier enemyTier;
+    public Sprite sprite;
 
-    public int healthThreshold; // Umbral de salud del enemigo
-    public int diceCount; // Cantidad de dados correspiondientes al enemigo
-    public int maximunDiceThrow; // Cantidad de tiradas de dados para el enemigo
-    public int failureDamage; // Castigo al usuario al perder el combate
-    public int RPGLife; // Vida del enemigo en modo RPG Tradicional
-    public int RPGDiceCount; // Cantidad de dados en modo RPG Tradicional
+    [Header("Sistema RPG")]
+    [Tooltip("Vida del enemigo en modo RPG Tradicional.")]
+    public int RPGLife;
 
-    [Header("Comportamiento en Turno (Pesos/Probabilidades)")]
-    [Tooltip("Peso para curarse vida")]
+    [Tooltip("Cantidad de dados que tira el enemigo en modo RPG Tradicional.")]
+    public int RPGDiceCount;
+
+    [Tooltip("Daño que recibe el jugador al perder el combate.")]
+    public int failureDamage;
+
+    [Tooltip("Intentos que tiene el jugador para derrotar al enemigo antes de perder el combate.")]
+    public int maximunDiceThrow;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Comportamiento por turno — Probabilidades de acción
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Header("Comportamiento en Turno — Probabilidad de acción (pesos)")]
+    [Tooltip("Peso para curarse vida. Se normaliza junto con los demás pesos.")]
     public float healChance = 10f;
-    [Tooltip("Peso para ganar armadura")]
+
+    [Tooltip("Peso para ganar armadura.")]
     public float armorChance = 10f;
-    [Tooltip("Peso para activar espinas")]
+
+    [Tooltip("Peso para activar espinas (daño reflejado).")]
     public float thornsChance = 10f;
-    [Tooltip("Peso para activar evasión por velocidad")]
+
+    [Tooltip("Peso para activar evasión de velocidad (esquivar el próximo ataque).")]
     public float speedChance = 10f;
-    [Tooltip("Peso para no hacer nada")]
+
+    [Tooltip("Peso para no hacer nada.")]
     public float doNothingChance = 60f;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Comportamiento por turno — Magnitud de cada efecto
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Header("Comportamiento en Turno — Magnitud de efectos")]
+
+    [Tooltip("Porcentaje de vida total que se cura el enemigo al ejecutar Heal (0.0 = 0%, 1.0 = 100%).")]
+    [Range(0f, 1f)]
+    public float healAmount = 0.15f;
+
+    [Tooltip("Cantidad plana de armadura que gana el enemigo al ejecutar Armor.")]
+    public int armorAmount = 5;
+
+    [Tooltip("Porcentaje del daño recibido que el enemigo devuelve al jugador al ejecutar Thorns (0.0 = 0%, 1.0 = 100%).")]
+    [Range(0f, 1f)]
+    public float thornsAmount = 0.30f;
+
+    [Tooltip("Probabilidad de esquivar el próximo ataque del jugador al ejecutar Speed (0.0 = 0%, 1.0 = 100%).")]
+    [Range(0f, 1f)]
+    public float speedAmount = 0.50f;
+
+    // ─────────────────────────────────────────────────────────────────────────
 
     public String GetEnemyTier()
     {
-        if(enemyTier == EnemyTier.Tier_1)
+        return enemyTier switch
         {
-            return "Enemy Tier 1";
-        }
-        else if(enemyTier == EnemyTier.Tier_2)
-        {
-            return "Enemy Tier 2";
-        }
-        else if(enemyTier == EnemyTier.Tier_3)
-        {
-            return "Enemy Tier 3";
-        }
-        return "Tier_1";
+            EnemyTier.Tier_1 => "Enemy Tier 1",
+            EnemyTier.Tier_2 => "Enemy Tier 2",
+            EnemyTier.Tier_3 => "Enemy Tier 3",
+            _ => "Tier_1"
+        };
     }
 }

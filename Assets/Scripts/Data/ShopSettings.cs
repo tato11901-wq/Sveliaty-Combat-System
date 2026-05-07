@@ -38,6 +38,8 @@ public class ShopSettings : ScriptableObject
     public int rerollCostIncrement = 5;
 
     [Header("Restricciones de Habilidades")]
-    [Tooltip("Máximo de habilidades activas por rama.")]
-    public int maxAbilitiesPerBranch = 2;
+    [Tooltip("Máximo de habilidades activas no-básicas por rama. " +
+             "IMPORTANTE: Mantener en 1 para respetar la bijección Afinidad→Slot " +
+             "(cada rama controla exactamente un slot visual del personaje).")]
+    public int maxAbilitiesPerBranch = 1;
 }

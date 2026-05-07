@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Espiritu Perdido 3
   m_EditorClassIdentifier: 
   enemyTier: 2
-  sprite: {fileID: 21300000, guid: efaf44e1f4f5d244398ecbee19094785, type: 3}
-  healthThreshold: 24
-  diceCount: 3
-  maximunDiceThrow: 2
-  failureDamage: 15
-  RPGLife: 30
+  sprite: {fileID: 21300000, guid: fbf6b8aef0a59f841abe7faeb72a7d37, type: 3}
+  RPGLife: 50
   RPGDiceCount: 3
+  failureDamage: 12
+  maximunDiceThrow: 2
+  healChance: 50
+  armorChance: 0
+  thornsChance: 0
+  speedChance: 0
+  doNothingChance: 50
+  healAmount: 0.4
+  armorAmount: 0
+  thornsAmount: 0
+  speedAmount: 0

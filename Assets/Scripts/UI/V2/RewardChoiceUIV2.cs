@@ -50,7 +50,11 @@ namespace Sveliaty.UI.V2
 
             mainPanel.SetActive(true);
             if (titleText != null)
-                titleText.text = $"¡VICTORIA!\nPuntuación: {finalScore}\nElige tu recompensa:";
+            {
+                int inkGained = combatManager != null ? combatManager.LastInkReward : 0;
+                string inkString = inkGained > 0 ? $"\nGanaste {inkGained} de tinta." : "\n(Ganancia de tinta bloqueada por Pasiva/Maldición)";
+                titleText.text = $"¡VICTORIA!\nPuntuación: {finalScore}{inkString}\nElige tu recompensa:";
+            }
 
             ClearCards();
 
@@ -108,6 +112,11 @@ namespace Sveliaty.UI.V2
             combatLogUI?.Log($"Recompensa elegida: 1 carta de {type}");
             combatManager?.SelectRewardCard(type);
             
+            if (combatManager != null && combatManager.PendingCardSelections > 0)
+            {
+                return;
+            }
+
             // Animación de salida y cerrar
             mainPanel.transform.DOScale(Vector3.zero, 0.3f).SetEase(Ease.InBack).OnComplete(() => {
                 mainPanel.SetActive(false);

@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9d4ab935c45d4745afac78e263bf81f, type: 3}
   m_Name: Destreza 2
   m_EditorClassIdentifier: 
-  itemName: Fuerza
-  description: 
+  itemName: "M\xE1scara del Murmullo"
+  description: "Su interior susurra movimientos antes de que ocurran. Quien la usa
+    pierde contundencia en sus ataques, pero convierte peque\xF1os cortes en energ\xEDa
+    robada.\n\n-2 Fuerza\n+4 Destreza\n+2 Robo de Vida"
   icon: {fileID: 0}
   baseInkPrice: 50
   deltaFuerza: -2
   deltaVelocidad: 0
   deltaDestreza: 4
-  deltaArmadura: 1
+  deltaArmadura: 0
   deltaProbCritico: 0
-  deltaRoboVida: 0
+  deltaRoboVida: 2
   appearanceWeight: 1
   minShopVisit: 0

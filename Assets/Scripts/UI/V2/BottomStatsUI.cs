@@ -12,6 +12,8 @@ namespace Sveliaty.UI.V2
         public UnityEngine.UI.Image healthFillImage;
         [Tooltip("Texto numérico XX/YY")]
         public TextMeshProUGUI healthText;
+        [Tooltip("Imagen tipo 'Filled' para la armadura del jugador (Gris)")]
+        public UnityEngine.UI.Image playerArmorFillImage;
         
         [Header("Enemy Health Visuals")]
         [Tooltip("Imagen tipo 'Filled' para la barra de vida del enemigo")]
@@ -37,17 +39,32 @@ namespace Sveliaty.UI.V2
         private List<GameObject> activeHearts = new List<GameObject>();
         private List<GameObject> activeTokens = new List<GameObject>();
 
-        public void UpdateHealth(int currentHealth, int maxHealth)
+        public void UpdateHealth(int currentHealth, int maxHealth, int currentArmor = 0)
         {
             if (healthText != null)
             {
-                healthText.text = $"{currentHealth}/{maxHealth}";
+                if (currentArmor > 0)
+                    healthText.text = $"{currentHealth} <color=#AAAAAA>(+{currentArmor} armadura)</color> / {maxHealth}";
+                else
+                    healthText.text = $"{currentHealth}/{maxHealth}";
             }
 
-            if (healthFillImage != null && maxHealth > 0)
+            if (maxHealth > 0)
             {
                 float fillAmount = (float)Mathf.Max(0, currentHealth) / maxHealth;
-                healthFillImage.DOFillAmount(fillAmount, 0.3f).SetEase(Ease.OutCubic);
+                if (healthFillImage != null)
+                    healthFillImage.DOFillAmount(fillAmount, 0.3f).SetEase(Ease.OutCubic);
+                    
+                if (playerArmorFillImage != null)
+                {
+                    float armorFill = (float)Mathf.Max(0, currentArmor) / maxHealth;
+                    playerArmorFillImage.DOFillAmount(armorFill, 0.3f).SetEase(Ease.OutCubic);
+                    
+                    if (currentArmor <= 0)
+                        playerArmorFillImage.DOFade(0f, 0.2f);
+                    else
+                        playerArmorFillImage.DOFade(1f, 0.2f);
+                }
             }
         }
 

@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a19c9057ab7e59644b4b9c5a0c89f2bb, type: 3}
+  m_Name: Cabeza 01
+  m_EditorClassIdentifier: 
+  pieceName: 'Cabeza 01 '
+  sourceAbility: {fileID: 11400000, guid: 8f8a20910f99df340aa0570c2b1e1403, type: 2}
+  prefab: {fileID: 2192747235827767221, guid: 5f2fa68ad2c0dbd4cadeef1506f31ff1, type: 3}

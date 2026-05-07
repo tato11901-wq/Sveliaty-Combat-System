@@ -1,0 +1,52 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe7df7b5466ea20459cd85088692be36, type: 3}
+  m_Name: VP Settings
+  m_EditorClassIdentifier: 
+  tier3FinalMaterial: {fileID: 2100000, guid: 6f6f5306b03f47b458a1530e6cb99548, type: 2}
+  fuerzaColor: {r: 0.85, g: 0.1, b: 0.1, a: 1}
+  agilidadColor: {r: 0.7735849, g: 0.5694088, b: 0.3539516, a: 1}
+  destrezaColor: {r: 0.1, g: 0.8, b: 0.2, a: 1}
+  zeroCardsColor: {r: 0.15, g: 0.15, b: 0.15, a: 1}
+  maxCardsReference: 20
+  cardColorCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  tier1ColorIntensity: 0.8
+  tier1Smoothness: 0.15
+  tier1SpecularColor: {r: 0.1, g: 0.1, b: 0.1, a: 1}
+  tier1EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+  tier2ColorIntensity: 1
+  tier2Smoothness: 0.45
+  tier2SpecularColor: {r: 0.3, g: 0.3, b: 0.3, a: 1}
+  tier2EmissionColor: {r: 0, g: 0, b: 0, a: 1}

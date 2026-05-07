@@ -59,6 +59,8 @@ namespace Sveliaty.UI.V2
             {
                 playerManager.OnCardsChanged += HandleCardsChanged;
                 playerManager.OnInkChanged   += HandleInkChanged;
+                playerManager.OnHealthChanged += HandleHealthChanged;
+                playerManager.OnArmorChanged += HandleArmorChanged;
             }
 
             victoryScreen?.SetActive(false);
@@ -105,6 +107,8 @@ namespace Sveliaty.UI.V2
             {
                 playerManager.OnCardsChanged -= HandleCardsChanged;
                 playerManager.OnInkChanged   -= HandleInkChanged;
+                playerManager.OnHealthChanged -= HandleHealthChanged;
+                playerManager.OnArmorChanged -= HandleArmorChanged;
             }
         }
 
@@ -115,13 +119,14 @@ namespace Sveliaty.UI.V2
             defeatScreen?.SetActive(false);
 
             UpdateTopBarEnemyInfo();
-            bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife());
+            bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife(), playerManager != null ? playerManager.ActiveArmor : 0);
             bottomStatsUI?.UpdateAttempts(enemy.attemptsRemaining);
             cardInteractionUI?.UpdateDeckCounts(playerManager);
             UpdateBottomCardStats();
             bottomStatsUI?.UpdateInk(playerManager.GetInk());
             enemyVisualsUI?.SetupEnemy(enemy);
-            combatLogUI?.LogCombatStart(enemy.enemyData.displayName);
+            string enemyNameForLog = enemy.IsElite ? $"<color=#DC143C>{enemy.enemyData.displayName}</color>" : enemy.enemyData.displayName;
+            combatLogUI?.LogCombatStart(enemyNameForLog);
             
             // Forzar actualización inicial de la línea de tiempo
             if (bossRushManager != null)
@@ -151,7 +156,11 @@ namespace Sveliaty.UI.V2
 
         private void HandleEnemyAction(string actionDescription)
         {
-            string enemyName = combatManager.GetCurrentEnemy()?.enemyData.displayName ?? "Enemigo";
+            var enemy = combatManager.GetCurrentEnemy();
+            string enemyName = enemy?.enemyData.displayName ?? "Enemigo";
+            if (enemy != null && enemy.IsElite)
+                enemyName = $"<color=#DC143C>{enemyName}</color>";
+
             combatLogUI?.LogEnemyAction($"{enemyName}: {actionDescription}");
             UpdateTopBarEnemyInfo(); // Para reflejar curas o armadura
         }
@@ -160,15 +169,20 @@ namespace Sveliaty.UI.V2
         {
             combatLogUI?.LogDamageReceived(damage);
             bottomStatsUI?.PlayDamageAnimation();
-            bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife());
+            bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife(), playerManager != null ? playerManager.ActiveArmor : 0);
         }
 
-        private void HandleAttackResult(int roll, int bonus, int total, float multiplier, bool isCritical, float affinityMultiplier)
+        private void HandleAttackResult(int roll, int bonus, int total, float multiplier, bool isCritical, float affinityMultiplier, bool isFirstStrike)
         {
+            var enemy = combatManager.GetCurrentEnemy();
+            string enemyName = enemy?.enemyData.displayName ?? "Enemigo";
+            if (enemy != null && enemy.IsElite)
+                enemyName = $"<color=#DC143C>{enemyName}</color>";
+
             enemyVisualsUI?.PlayDamageAnimation();
             combatLogUI?.LogAttackResult(
-                combatManager.GetCurrentEnemy()?.enemyData.displayName ?? "Enemigo",
-                roll, bonus, total, multiplier, isCritical, affinityMultiplier
+                enemyName,
+                roll, bonus, total, multiplier, isCritical, affinityMultiplier, isFirstStrike
             );
             UpdateTopBarEnemyInfo();
         }
@@ -186,7 +200,44 @@ namespace Sveliaty.UI.V2
                 enemyVisualsUI?.PlayDeathAnimation();
                 victoryScreen?.SetActive(true);
                 if (resultsText != null)
-                    resultsText.text = $"Puntuación: {finalScore}\nObtuviste: {rewardCard}";
+                {
+                    int inkGained = combatManager.LastInkReward;
+                    string inkString = inkGained > 0 ? $"\nGanaste {inkGained} de tinta." : "\n(Ganancia de tinta bloqueada por Pasiva/Maldición)";
+
+                    if (Sveliaty.Passives.PassiveManager.Instance != null && !Sveliaty.Passives.PassiveManager.Instance.CanGainCards())
+                    {
+                        bool newlyEquipped = false;
+                        foreach (var passive in Sveliaty.Passives.PassiveManager.Instance.ActivePassives)
+                        {
+                            if (passive is Sveliaty.Passives.PassiveCardHoarder hoarder && hoarder.justEquipped)
+                            {
+                                newlyEquipped = true;
+                                hoarder.justEquipped = false;
+                                break;
+                            }
+                        }
+
+                        if (newlyEquipped)
+                        {
+                            resultsText.text = $"Puntuación: {finalScore}\nObtuviste: ¡10 cartas aleatorias!{inkString}";
+                        }
+                        else
+                        {
+                            resultsText.text = $"Puntuación: {finalScore}\nEstás maldito, no puedes ganar más cartas{inkString}";
+                        }
+                    }
+                    else
+                    {
+                        if (rewardCard == default)
+                        {
+                            resultsText.text = $"Puntuación: {finalScore}\nNo se obtuvieron cartas.{inkString}";
+                        }
+                        else
+                        {
+                            resultsText.text = $"Puntuación: {finalScore}\nObtuviste 1 carta de:\n{rewardCard}{inkString}";
+                        }
+                    }
+                }
             }
             else
             {
@@ -303,6 +354,19 @@ namespace Sveliaty.UI.V2
         private void HandleInkChanged(int newInk)
         {
             bottomStatsUI?.UpdateInk(newInk);
+        }
+
+        private void HandleHealthChanged(int currentHealth, int maxHealth)
+        {
+            bottomStatsUI?.UpdateHealth(currentHealth, maxHealth, playerManager != null ? playerManager.ActiveArmor : 0);
+        }
+
+        private void HandleArmorChanged(int newArmor)
+        {
+            if (combatManager != null)
+            {
+                bottomStatsUI?.UpdateHealth(combatManager.GetPlayerLife(), combatManager.GetPlayerMaxLife(), newArmor);
+            }
         }
 
         private void UpdateBottomCardStats()

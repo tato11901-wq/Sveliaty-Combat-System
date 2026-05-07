@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Zorro 3
   m_EditorClassIdentifier: 
   enemyTier: 2
-  sprite: {fileID: 21300000, guid: d2b944ca250c8514c827a38bf3fe140b, type: 3}
-  healthThreshold: 28
-  diceCount: 3
-  maximunDiceThrow: 2
-  failureDamage: 15
-  RPGLife: 30
+  sprite: {fileID: 21300000, guid: 9b0a85458937efc428620a255668857e, type: 3}
+  RPGLife: 40
   RPGDiceCount: 3
+  failureDamage: 10
+  maximunDiceThrow: 4
+  healChance: 0
+  armorChance: 0
+  thornsChance: 0
+  speedChance: 50
+  doNothingChance: 50
+  healAmount: 0
+  armorAmount: 0
+  thornsAmount: 0
+  speedAmount: 0.6

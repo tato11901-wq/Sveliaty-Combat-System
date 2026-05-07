@@ -25,14 +25,14 @@ public class AbilityAction : CombatAction
         // 0. Evasión del enemigo (Buff Velocidad)
         if (enemy.hasSpeedEvasion)
         {
-            if (UnityEngine.Random.Range(0f, 100f) < 50f) 
+            if (UnityEngine.Random.Range(0f, 1f) < enemy.activeSpeedEvasion)
             {
                 Debug.Log($"[{ActionName}] El enemigo evadió la habilidad gracias a su Velocidad.");
-                enemy.hasSpeedEvasion = false; 
+                enemy.activeSpeedEvasion = 0f;
                 manager.RegisterAttackResult(0, 0, 0, 1f);
                 return false;
             }
-            enemy.hasSpeedEvasion = false; 
+            enemy.activeSpeedEvasion = 0f;
         }
 
         // 1. Chance de éxito propia de la habilidad
@@ -84,7 +84,8 @@ public class AbilityAction : CombatAction
         }
 
         // 4. Multiplicador de afinidad + bonus
-        float affinityMult = manager.GetAffinityMultiplier(ActionAffinity) + data.affinityMultiplierBonus;
+        bool isFirstStrike = false;
+        float affinityMult = manager.GetAffinityMultiplier(ActionAffinity, out isFirstStrike) + data.affinityMultiplierBonus;
         float multiplier = affinityMult;
 
         if (BestiaryManager.Instance != null)
@@ -127,7 +128,7 @@ public class AbilityAction : CombatAction
         }
 
         // 7. Reportar resultado
-        manager.RegisterAttackResult(roll, Mathf.RoundToInt(statBonus), totalFinal, multiplier, isCritical, affinityMult);
+        manager.RegisterAttackResult(roll, Mathf.RoundToInt(statBonus), totalFinal, multiplier, isCritical, affinityMult, isFirstStrike);
 
         // --- ROBO DE VIDA ---
         float lifesteal = manager.statsManager != null ? manager.statsManager.GetFinalStat(StatType.RoboVida, null) : 0f;

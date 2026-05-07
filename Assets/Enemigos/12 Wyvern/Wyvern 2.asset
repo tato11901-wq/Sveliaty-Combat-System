@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Wyvern 2
   m_EditorClassIdentifier: 
   enemyTier: 1
-  sprite: {fileID: 21300000, guid: 495b48d2bf2d51f4c9caa239d26900ac, type: 3}
-  healthThreshold: 20
-  diceCount: 2
-  maximunDiceThrow: 2
-  failureDamage: 15
-  RPGLife: 30
+  sprite: {fileID: 21300000, guid: 699c6201239f1af45aff89f580821cf8, type: 3}
+  RPGLife: 40
   RPGDiceCount: 3
+  failureDamage: 15
+  maximunDiceThrow: 3
+  healChance: 0
+  armorChance: 0
+  thornsChance: 50
+  speedChance: 0
+  doNothingChance: 50
+  healAmount: 0
+  armorAmount: 0
+  thornsAmount: 0.2
+  speedAmount: 0

@@ -14,9 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enemyTier: 2
   sprite: {fileID: 21300000, guid: fa5a3933f98465c4c8ebbbfb0a4d032f, type: 3}
-  healthThreshold: 36
-  diceCount: 3
-  maximunDiceThrow: 3
-  failureDamage: 25
-  RPGLife: 30
-  RPGDiceCount: 3
+  RPGLife: 80
+  RPGDiceCount: 4
+  failureDamage: 15
+  maximunDiceThrow: 4
+  healChance: 0
+  armorChance: 100
+  thornsChance: 0
+  speedChance: 0
+  doNothingChance: 0
+  healAmount: 0
+  armorAmount: 30
+  thornsAmount: 0
+  speedAmount: 0

@@ -25,8 +25,8 @@ namespace Sveliaty.Passives
                 // Penalización fija por cada golpe que logre penetrar armadura (damage > 0)
                 if (damage > 0)
                 {
-                    combatManager.playerManager.AddInk(-5);
-                    Debug.Log("[Pasiva DiscountStore] Perdiste 5 de tinta por recibir daño.");
+                    combatManager.playerManager.SpendInk(10);
+                    Debug.Log("[Pasiva DiscountStore] Perdiste 10 de tinta por recibir daño.");
                 }
             }
         }

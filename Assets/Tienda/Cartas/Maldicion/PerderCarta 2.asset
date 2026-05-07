@@ -19,7 +19,7 @@ MonoBehaviour:
   activationType: 0
   requiresPlayerActivation: 0
   mustActivateOnTurnOne: 0
-  effectType: 1
+  effectType: 2
   effectValue: -3
   duration: 0
   passiveOnly: 0

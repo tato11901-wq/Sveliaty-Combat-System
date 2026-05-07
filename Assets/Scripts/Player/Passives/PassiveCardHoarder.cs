@@ -7,6 +7,8 @@ namespace Sveliaty.Passives
     [CreateAssetMenu(menuName = "Sveliaty/Passives/Card Hoarder")]
     public class PassiveCardHoarder : PassiveSkill
     {
+        public bool justEquipped = false;
+
         private void Reset()
         {
             passiveName = "Acaparador de Cartas";
@@ -16,6 +18,7 @@ namespace Sveliaty.Passives
 
         public override void OnEquip(PassiveManager manager, PlayerManager playerManager)
         {
+            justEquipped = true;
             if (playerManager != null)
             {
                 // Dar 10 cartas aleatorias
@@ -24,7 +27,7 @@ namespace Sveliaty.Passives
                 for(int i = 0; i < 10; i++)
                 {
                     AffinityType randomType = allTypes[UnityEngine.Random.Range(0, allTypes.Length)];
-                    playerManager.AddCards(randomType, 1);
+                    playerManager.AddCards(randomType, 1, true);
                 }
                 
                 Debug.Log("[Pasiva] Otorgadas 10 cartas aleatorias.");

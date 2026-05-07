@@ -12,14 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9d4ab935c45d4745afac78e263bf81f, type: 3}
   m_Name: Fuerza 3
   m_EditorClassIdentifier: 
-  itemName: Fuerza
-  description: 
+  itemName: Guanteletes de Hierro Hueco
+  description: "Parecen vac\xEDos por dentro, pero pesan como roca. Amplifican la
+    potencia de cada ataque y convierten el cuerpo en una muralla lenta.\n\n+4 Fuerza\n-2
+    Velocidad\n+3 Armadura"
   icon: {fileID: 0}
   baseInkPrice: 50
-  deltaFuerza: 6
-  deltaVelocidad: 0
-  deltaDestreza: -4
-  deltaArmadura: 1
+  deltaFuerza: 4
+  deltaVelocidad: -2
+  deltaDestreza: 0
+  deltaArmadura: 3
   deltaProbCritico: 0
   deltaRoboVida: 0
   appearanceWeight: 1

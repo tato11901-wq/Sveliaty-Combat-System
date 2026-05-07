@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Ciclope 3
   m_EditorClassIdentifier: 
   enemyTier: 2
-  sprite: {fileID: 21300000, guid: a0b7a1ae407ce714fbfea54631395a60, type: 3}
-  healthThreshold: 34
-  diceCount: 3
-  maximunDiceThrow: 2
-  failureDamage: 30
-  RPGLife: 30
-  RPGDiceCount: 3
+  sprite: {fileID: 21300000, guid: 127b770c67a586d4680d94bc2dec10e2, type: 3}
+  RPGLife: 90
+  RPGDiceCount: 4
+  failureDamage: 15
+  maximunDiceThrow: 5
+  healChance: 30
+  armorChance: 30
+  thornsChance: 0
+  speedChance: 0
+  doNothingChance: 80
+  healAmount: 0.25
+  armorAmount: 20
+  thornsAmount: 0
+  speedAmount: 0

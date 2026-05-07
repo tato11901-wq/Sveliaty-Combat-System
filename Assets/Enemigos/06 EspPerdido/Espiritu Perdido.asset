@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b49902360aca114ca57cefec09dacb9, type: 3}
   m_Name: Espiritu Perdido
   m_EditorClassIdentifier: 
-  displayName: Espiritu Perdido
+  displayName: "Esp\xEDritu Perdido"
   enemySprite: {fileID: 0}
   affinityType: 2
   affinityRelations:

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58b1d100c8094f04489e59c46ba00e41, type: 3}
+  m_Name: Espiritu Abandonado
+  m_EditorClassIdentifier: 
+  displayName: "Esp\xEDritu Abandonado "
+  sprite: {fileID: 21300000, guid: ba8f2c28ef56f204091d5a77d638be82, type: 3}
+  affinityType: 0
+  affinityRelations:
+  - type: 0
+    multiplier: 0
+  - type: 2
+    multiplier: 3
+  - type: 1
+    multiplier: 2
+  baseRPGLife: 60
+  baseRPGDiceCount: 2
+  baseFailureDamage: 15
+  baseMaxAttempts: 5
+  healChance: 0
+  armorChance: 0
+  thornsChance: 50
+  speedChance: 0
+  doNothingChance: 50
+  healAmount: 0
+  armorAmount: 0
+  thornsAmount: 0.1
+  speedAmount: 0
+  tierLifeMultipliers:
+  - 1
+  - 1.6
+  - 2.5
+  - 4
+  tierDamageMultipliers:
+  - 1
+  - 1.4
+  - 2
+  - 3
+  tierAttemptBonuses: 00000000010000000200000003000000

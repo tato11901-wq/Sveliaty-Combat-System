@@ -12,7 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb13d52ba97f6624a9acc67f9df3c4e1, type: 3}
   m_Name: Proteccion Contra Muerte 1
   m_EditorClassIdentifier: 
-  id: 13
   curseName: Negacion de Muerte
   description: Seguro contra la muerte, si mueres, revives con 1 punto de vida
   type: 0
@@ -20,7 +19,7 @@ MonoBehaviour:
   activationType: 0
   requiresPlayerActivation: 0
   mustActivateOnTurnOne: 0
-  effectType: 8
+  effectType: 9
   effectValue: 0
   duration: -1
   passiveOnly: 0

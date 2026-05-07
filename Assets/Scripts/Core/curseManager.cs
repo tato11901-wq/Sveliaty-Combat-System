@@ -16,7 +16,6 @@ public class CurseManager : MonoBehaviour
 
     [Header("Debug Inspector")]
     [SerializeField] private List<CurseInstance> activeCurses = new List<CurseInstance>();
-    private int combatsWithoutRewards = 0;
 
     public event Action<CurseData> OnCurseObtained;
     public event Action<CurseData> OnCurseActivated;
@@ -176,6 +175,22 @@ public class CurseManager : MonoBehaviour
                 details = $"\n\nLanzaste un {roll}.\n<b><color={gColor}>Vida: {gOldLife} {sign}{effect} → {gNewLife}</color></b>";
 
                 Debug.Log($"Gambling: {roll} → {(effect > 0 ? "+" : "")}{effect} HP");
+                break;
+
+            case CurseEffect.ModifyInk:
+                int oldInk = playerManager.GetInk();
+                if (curse.effectValue > 0)
+                {
+                    playerManager.AddInk(curse.effectValue);
+                    details = $"\n\n<b><color=green>Ganaste {curse.effectValue} de tinta.</color></b>";
+                }
+                else
+                {
+                    playerManager.SpendInk(Mathf.Abs(curse.effectValue));
+                    details = $"\n\n<b><color=red>Perdiste {Mathf.Abs(curse.effectValue)} de tinta.</color></b>";
+                }
+                int newInk = playerManager.GetInk();
+                Debug.Log($"[Curse] Tinta modificada: {oldInk} → {newInk}");
                 break;
         }
         
@@ -342,7 +357,9 @@ public class CurseManager : MonoBehaviour
 
     public bool HasRewardBlock()
     {
-        return combatsWithoutRewards > 0;
+        return activeCurses.Any(c => 
+            c.data.effectType == CurseEffect.BlockRewards && 
+            c.remainingDuration != 0);
     }
 
     // =========================

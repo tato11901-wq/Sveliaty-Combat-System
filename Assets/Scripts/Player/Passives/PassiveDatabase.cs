@@ -8,12 +8,18 @@ namespace Sveliaty.Passives
     {
         public List<PassiveSkill> allPassives = new List<PassiveSkill>();
 
-        public List<PassiveSkill> GetThreeRandomPassives()
+        public List<PassiveSkill> GetThreeRandomPassives(List<PassiveSkill> excludedPassives = null)
         {
-            if (allPassives.Count <= 3) return new List<PassiveSkill>(allPassives);
+            List<PassiveSkill> availablePassives = new List<PassiveSkill>(allPassives);
+            if (excludedPassives != null)
+            {
+                availablePassives.RemoveAll(p => excludedPassives.Exists(e => e.passiveName == p.passiveName));
+            }
+
+            if (availablePassives.Count <= 3) return new List<PassiveSkill>(availablePassives);
 
             List<PassiveSkill> result = new List<PassiveSkill>();
-            List<PassiveSkill> pool = new List<PassiveSkill>(allPassives);
+            List<PassiveSkill> pool = new List<PassiveSkill>(availablePassives);
 
             // Intentar obtener 1 de cada perfil (Si es posible)
             PassiveSkill muyBuena = pool.Find(p => p.profile == PassiveProfile.MuyBuenaConContra);

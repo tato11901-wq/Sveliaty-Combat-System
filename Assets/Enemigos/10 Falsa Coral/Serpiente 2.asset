@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcc9c9f22c1a905478e49b3cf1a7fb9e, type: 3}
+  m_Name: Serpiente 2
+  m_EditorClassIdentifier: 
+  enemyTier: 1
+  sprite: {fileID: 21300000, guid: 7787dbd9ca0f8184faf3b8633132fcbe, type: 3}
+  RPGLife: 20
+  RPGDiceCount: 2
+  failureDamage: 6
+  maximunDiceThrow: 2
+  healChance: 0
+  armorChance: 0
+  thornsChance: 0
+  speedChance: 10
+  doNothingChance: 60
+  healAmount: 0
+  armorAmount: 0
+  thornsAmount: 0
+  speedAmount: 0.2

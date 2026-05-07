@@ -127,39 +127,57 @@ public class ShopManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Devuelve las habilidades que el jugador puede comprar en este momento:
-    ///  - Si la rama tiene < maxAbilitiesPerBranch → habilidades nuevas de esa rama.
-    ///  - Si la rama tiene slots llenos → solo habilidades ya poseídas (para subir Tier).
-    /// Nunca incluye habilidades que ya están en Tier 3.
+    /// Devuelve las habilidades que el jugador puede comprar en este momento.
+    ///
+    /// Regla por rama:
+    ///   - Rama SIN habilidades compradas → aparecen todas las habilidades no-básicas de esa
+    ///     rama como compra nueva (Tier 1).
+    ///   - Rama CON una habilidad comprada → SOLO aparece esa habilidad para mejora (T2/T3).
+    ///     No aparecen otras habilidades de esa rama, aunque estén sin comprar.
+    ///   - Habilidad ya en Tier 3 → no aparece bajo ningún concepto.
+    ///   - Habilidades básicas → excluidas siempre.
     /// </summary>
-    private List<(AbilityData, int)> GetValidAbilityCandidates()
+    private List<(AbilityData ability, int targetTier)> GetValidAbilityCandidates()
     {
         var result = new List<(AbilityData, int)>();
         if (abilityDatabase == null || abilityManager == null) return result;
 
         foreach (AffinityType branch in Enum.GetValues(typeof(AffinityType)))
         {
-            int slotsUsed   = abilityManager.GetAbilityCountInBranch(branch);
-            int currentTier = 0; // para habilidades nuevas el tier destino es 1
-
             List<AbilityData> branchAbilities = abilityDatabase.GetAbilitiesByAffinity(branch);
+
+            // Buscar la habilidad no-básica ya poseída en esta rama (máximo 1 por diseño)
+            AbilityData ownedAbility = null;
+            int ownedTier = 0;
 
             foreach (AbilityData ability in branchAbilities)
             {
-                int ownedTier = abilityManager.GetAbilityTier(ability);
-
-                if (ownedTier == 0)
+                if (ability.isBasicAbility) continue;
+                int tier = abilityManager.GetAbilityTier(ability);
+                if (tier > 0)
                 {
-                    // Habilidad NO poseída: solo válida si la rama tiene slot libre
-                    if (slotsUsed < settings.maxAbilitiesPerBranch)
+                    ownedAbility = ability;
+                    ownedTier = tier;
+                    break; // Solo puede haber una por rama
+                }
+            }
+
+            if (ownedAbility != null)
+            {
+                // La rama tiene una habilidad comprada:
+                // SOLO esa habilidad puede aparecer, y únicamente si no está en T3
+                if (ownedTier < 3)
+                    result.Add((ownedAbility, ownedTier + 1));
+                // Si está en T3, no se añade nada de esta rama
+            }
+            else
+            {
+                // La rama está vacía: se ofrecen TODAS las habilidades no-básicas como nuevas
+                foreach (AbilityData ability in branchAbilities)
+                {
+                    if (!ability.isBasicAbility)
                         result.Add((ability, 1));
                 }
-                else if (ownedTier < 3)
-                {
-                    // Habilidad poseída con Tier < 3: válida para mejora aunque la rama esté llena
-                    result.Add((ability, ownedTier + 1));
-                }
-                // ownedTier == 3 → ya está al máximo, no se incluye
             }
         }
 

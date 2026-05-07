@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Duende 1
   m_EditorClassIdentifier: 
   enemyTier: 0
-  sprite: {fileID: 21300000, guid: 647bb280f13d1f845b425955688e6356, type: 3}
-  healthThreshold: 18
-  diceCount: 2
-  maximunDiceThrow: 3
-  failureDamage: 101
+  sprite: {fileID: 21300000, guid: f5b41a597df5bbd4e9a6ba46f7aa3ae3, type: 3}
   RPGLife: 30
   RPGDiceCount: 3
+  failureDamage: 5
+  maximunDiceThrow: 3
+  healChance: 0
+  armorChance: 0
+  thornsChance: 0
+  speedChance: 50
+  doNothingChance: 50
+  healAmount: 0
+  armorAmount: 0
+  thornsAmount: 0
+  speedAmount: 0.5
