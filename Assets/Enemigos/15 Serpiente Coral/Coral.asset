@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b49902360aca114ca57cefec09dacb9, type: 3}
+  m_Name: Coral
+  m_EditorClassIdentifier: 
+  displayName: Falsa Coral
+  enemySprite: {fileID: 0}
+  affinityType: 1
+  affinityRelations:
+  - type: 1
+    multiplier: 3
+  enemyTierData:
+  - {fileID: 11400000, guid: e90e388e81d9078428c3dfdfe48b5895, type: 2}
+  - {fileID: 11400000, guid: 94f604bb8f35d8b4190038c39c5e8ca8, type: 2}
+  - {fileID: 11400000, guid: debd7985de5360249a59ffa7b3fb905c, type: 2}
+  isSpirit: 0

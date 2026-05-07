@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Golem 1
   m_EditorClassIdentifier: 
   enemyTier: 0
-  sprite: {fileID: 21300000, guid: 9b38a5f2c533f664aaf9a496f4303da4, type: 3}
-  healthThreshold: 20
-  diceCount: 2
+  sprite: {fileID: 21300000, guid: 7663e505f4de9154980e2451dc39108e, type: 3}
+  RPGLife: 50
+  RPGDiceCount: 2
+  failureDamage: 5
   maximunDiceThrow: 3
-  failureDamage: 15
-  RPGLife: 30
-  RPGDiceCount: 3
+  healChance: 0
+  armorChance: 100
+  thornsChance: 0
+  speedChance: 0
+  doNothingChance: 60
+  healAmount: 0
+  armorAmount: 10
+  thornsAmount: 0
+  speedAmount: 0

@@ -102,12 +102,12 @@ public class PlayerManager : MonoBehaviour
     /// <summary>
     /// Modifica la vida del jugador
     /// </summary>
-    public void ModifyHealth(int amount)
+    public void ModifyHealth(int amount, bool bypassArmor = false)
     {
         int finalAmount = amount;
 
         // Mitigación de armadura si el amount es negativo (daño)
-        if (amount < 0 && activeArmor > 0)
+        if (!bypassArmor && amount < 0 && activeArmor > 0)
         {
             int damage = -amount;
             int mitigated = Mathf.Min(activeArmor, damage);
@@ -190,10 +190,10 @@ public class PlayerManager : MonoBehaviour
     /// <summary>
     /// Añade cartas de un tipo
     /// </summary>
-    public void AddCards(AffinityType type, int amount)
+    public void AddCards(AffinityType type, int amount, bool ignoreBlock = false)
     {
         if (amount <= 0) return;
-        if (Sveliaty.Passives.PassiveManager.Instance != null && !Sveliaty.Passives.PassiveManager.Instance.CanGainCards())
+        if (!ignoreBlock && Sveliaty.Passives.PassiveManager.Instance != null && !Sveliaty.Passives.PassiveManager.Instance.CanGainCards())
         {
             Debug.Log("[Pasiva] Ganancia de cartas bloqueada.");
             return;

@@ -4,6 +4,8 @@ using System.Linq;
 
 public class AbilityManager : MonoBehaviour
 {
+    public static AbilityManager Instance { get; private set; }
+
     [Header("References")]
     public AbilityDatabase abilityDatabase;
     public PlayerManager playerManager;
@@ -24,6 +26,12 @@ public class AbilityManager : MonoBehaviour
     private Dictionary<AffinityType, int> cardsSpentThisCombat = new Dictionary<AffinityType, int>();
     private Dictionary<AffinityType, int> maxCardsEverHad = new Dictionary<AffinityType, int>(); // Opcion 3
     
+    void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
+
     void Start()
     {
         InitializeAbilities();
@@ -162,5 +170,21 @@ public class AbilityManager : MonoBehaviour
             CardSpendingMode.Relative => maxCardsEverHad[type],
             _ => playerManager.GetCards(type)
         };
+    }
+
+    /// <summary>
+    /// Devuelve la lista de ActiveSkillState de todas las habilidades no-básicas
+    /// actualmente poseidas. Usado para empaquetar VictoryData al ganar la run.
+    /// </summary>
+    public System.Collections.Generic.List<ActiveSkillState> GetAllActiveSkillStates()
+    {
+        var result = new System.Collections.Generic.List<ActiveSkillState>();
+        foreach (var ability in abilityDatabase.allAbilities)
+        {
+            if (ability == null || ability.isBasicAbility) continue;
+            if (abilityTiers.TryGetValue(ability.name, out int tier) && tier > 0)
+                result.Add(new ActiveSkillState { ability = ability, tier = tier });
+        }
+        return result;
     }
 }

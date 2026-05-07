@@ -44,7 +44,12 @@ namespace Sveliaty.UI.V2
             mainPanel.transform.localScale = Vector3.zero;
             mainPanel.transform.DOScale(Vector3.one, 0.4f).SetEase(Ease.OutBack).SetUpdate(true);
 
-            List<PassiveSkill> choices = passiveDatabase.GetThreeRandomPassives();
+            List<PassiveSkill> currentPassives = null;
+            if (PassiveManager.Instance != null)
+            {
+                currentPassives = new List<PassiveSkill>(PassiveManager.Instance.ActivePassives);
+            }
+            List<PassiveSkill> choices = passiveDatabase.GetThreeRandomPassives(currentPassives);
 
             for (int i = 0; i < slots.Length; i++)
             {

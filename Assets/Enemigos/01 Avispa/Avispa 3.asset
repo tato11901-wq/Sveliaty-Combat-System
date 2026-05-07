@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Avispa 3
   m_EditorClassIdentifier: 
   enemyTier: 2
-  sprite: {fileID: 21300000, guid: e5a382e4b7e4fc946af49767669b608b, type: 3}
-  healthThreshold: 26
-  diceCount: 3
-  maximunDiceThrow: 2
-  failureDamage: 25
-  RPGLife: 48
+  sprite: {fileID: 21300000, guid: 736b36032e02a9c4fa599859074e628c, type: 3}
+  RPGLife: 70
   RPGDiceCount: 5
+  failureDamage: 7
+  maximunDiceThrow: 2
+  healChance: 30
+  armorChance: 0
+  thornsChance: 0
+  speedChance: 30
+  doNothingChance: 40
+  healAmount: 0.2
+  armorAmount: 0
+  thornsAmount: 0
+  speedAmount: 0.5

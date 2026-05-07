@@ -12,15 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9d4ab935c45d4745afac78e263bf81f, type: 3}
   m_Name: Destreza 3
   m_EditorClassIdentifier: 
-  itemName: Fuerza
-  description: 
+  itemName: "M\xE1scara de Porcelana Rota"
+  description: "Fragmentos blancos cubren el rostro del usuario. Su cuerpo se vuelve
+    m\xE1s fr\xE1gil y ligero, ejecutando ataques r\xE1pidos y precisos que absorben
+    la esencia rival.\n\n-3 Fuerza\n+6 Destreza\n+3 Robo de Vida"
   icon: {fileID: 0}
   baseInkPrice: 50
   deltaFuerza: -3
   deltaVelocidad: 0
   deltaDestreza: 6
-  deltaArmadura: 1
+  deltaArmadura: 0
   deltaProbCritico: 0
-  deltaRoboVida: 0
+  deltaRoboVida: 3
   appearanceWeight: 1
   minShopVisit: 0

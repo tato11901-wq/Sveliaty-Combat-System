@@ -27,12 +27,16 @@ public class GameOverUI : MonoBehaviour
     public GameObject gameOverContent; // EL PANEL que quieres ocultar (para no apagar todo el Canvas)
 
     [Header("Referencias Externas")]
-    public CharacterManager characterGenerator; // Referencia al generador
+    // El generador de personaje ya no es post-partida: el personaje se actualiza
+    // dinámicamente durante la run desde CharacterVisualController.
+    // Esta referencia se conserva por compatibilidad futura.
+    public CharacterVisualController characterVisualController;
 
     // Variables para guardar stats finales
     private int finalFuerza;
     private int finalAgilidad;
     private int finalDestreza;
+    private bool wasVictory;
 
     void Start()
     {
@@ -48,7 +52,8 @@ public class GameOverUI : MonoBehaviour
     /// </summary>
     public void ShowGameOver(int finalScore, int fuerzaCards, int agilidadCards, int destrezaCards, EnemyInstance defeatedBy, bool isVictory = false)
     {
-        Debug.Log($"💀 Mostrando Game Over - Score: {finalScore}");
+        wasVictory = isVictory;
+        Debug.Log($"💀 Mostrando Game Over - Score: {finalScore} (Victoria: {isVictory})");
 
         // Actualizar título (si está asignado)
         if (titleText != null)
@@ -164,31 +169,30 @@ public class GameOverUI : MonoBehaviour
     }
 
     /// <summary>
-    /// Maneja el clic en el botón "Finalizar Partida"
+    /// Maneja el clic en el botón "Finalizar Partida" / "Continuar"
     /// </summary>
     void OnFinishButtonClicked()
     {
-        Debug.Log("Finalizando partida, procediendo al generador de personaje");
+        Debug.Log($"Botón Finalizar presionado. wasVictory={wasVictory}");
 
-        if (characterGenerator != null)
+        if (gameOverContent != null)
+            gameOverContent.SetActive(false);
+        else
+            gameObject.SetActive(false);
+
+        if (wasVictory)
         {
-            // Ocultar solo el contenido de Game Over, no el objeto raíz (Canvas)
-            if (gameOverContent != null) 
-                gameOverContent.SetActive(false);
-            else
-                gameObject.SetActive(false); // Fallback si no está asignado
-            
-            // Iniciar el generador con los stats finales
-            characterGenerator.InicializarPostPartida(finalFuerza, finalAgilidad, finalDestreza);
-        }
-        else if (GameManager.Instance != null)
-        {
-            // Fallback si no hay generador asignado
-            GameManager.Instance.RestartGame();
+            // Si ganamos, vamos al generador de personaje
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Character Scene");
         }
         else
         {
-            Debug.LogError("characterGenerator y GameManager.Instance son null");
+            // Si perdimos, vamos al menú principal
+            // (Si RestartGame carga la StartScene, nos sirve)
+            if (GameManager.Instance != null)
+                GameManager.Instance.RestartGame();
+            else
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Main Menu");
         }
     }
 

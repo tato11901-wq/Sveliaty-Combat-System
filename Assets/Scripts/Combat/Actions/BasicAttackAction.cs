@@ -26,14 +26,14 @@ public class BasicAttackAction : CombatAction
         // 0. Evasión del enemigo (Buff Velocidad)
         if (enemy.hasSpeedEvasion)
         {
-            if (UnityEngine.Random.Range(0f, 100f) < 50f) // 50% de chance de evadir si el buff está activo
+            if (UnityEngine.Random.Range(0f, 1f) < enemy.activeSpeedEvasion)
             {
                 Debug.Log($"[{ActionName}] El enemigo evadió el ataque gracias a su Velocidad.");
-                enemy.hasSpeedEvasion = false; // Se consume la evasión
+                enemy.activeSpeedEvasion = 0f; // Se consume la evasión
                 manager.RegisterAttackResult(0, 0, 0, 1f);
                 return false;
             }
-            enemy.hasSpeedEvasion = false; // Se consume incluso si falla
+            enemy.activeSpeedEvasion = 0f; // Se consume incluso si falla
         }
 
         // 1. Cálculo de dados
@@ -65,7 +65,8 @@ public class BasicAttackAction : CombatAction
         }
 
         // 3. Multiplicador de afinidad
-        float affinityMult = manager.GetAffinityMultiplier(ActionAffinity);
+        bool isFirstStrike = false;
+        float affinityMult = manager.GetAffinityMultiplier(ActionAffinity, out isFirstStrike);
         float multiplier = affinityMult;
 
         if (BestiaryManager.Instance != null)
@@ -108,7 +109,7 @@ public class BasicAttackAction : CombatAction
         }
 
         // 6. Reportar resultado
-        manager.RegisterAttackResult(roll, Mathf.RoundToInt(statBonus), totalFinal, multiplier, isCritical, affinityMult);
+        manager.RegisterAttackResult(roll, Mathf.RoundToInt(statBonus), totalFinal, multiplier, isCritical, affinityMult, isFirstStrike);
         
         // --- ROBO DE VIDA ---
         float lifesteal = manager.statsManager != null ? manager.statsManager.GetFinalStat(StatType.RoboVida, null) : 0f;

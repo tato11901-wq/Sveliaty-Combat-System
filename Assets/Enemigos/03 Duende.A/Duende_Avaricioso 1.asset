@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Duende_Avaricioso 1
   m_EditorClassIdentifier: 
   enemyTier: 0
-  sprite: {fileID: 21300000, guid: b74f41f323a0d2048855f13374cf7d12, type: 3}
-  healthThreshold: 16
-  diceCount: 2
-  maximunDiceThrow: 2
-  failureDamage: 15
+  sprite: {fileID: 21300000, guid: 436a7ce9497fd8842be8ff490c9e6c6d, type: 3}
   RPGLife: 30
-  RPGDiceCount: 3
+  RPGDiceCount: 2
+  failureDamage: 10
+  maximunDiceThrow: 3
+  healChance: 0
+  armorChance: 100
+  thornsChance: 0
+  speedChance: 0
+  doNothingChance: 0
+  healAmount: 0
+  armorAmount: 5
+  thornsAmount: 0
+  speedAmount: 0

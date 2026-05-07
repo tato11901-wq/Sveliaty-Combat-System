@@ -12,14 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9d4ab935c45d4745afac78e263bf81f, type: 3}
   m_Name: Fuerza 2
   m_EditorClassIdentifier: 
-  itemName: Fuerza
-  description: 
+  itemName: Brazales del Coloso Hundido
+  description: "Antiguos brazales cubiertos de grietas negras. Incrementan enormemente
+    la fuerza f\xEDsica, endureciendo la piel como piedra.\n\n+5 Fuerza\n-3 Velocidad\n+5
+    Armadura"
   icon: {fileID: 0}
   baseInkPrice: 50
   deltaFuerza: 5
-  deltaVelocidad: 0
-  deltaDestreza: -3
-  deltaArmadura: 1
+  deltaVelocidad: -3
+  deltaDestreza: 0
+  deltaArmadura: 5
   deltaProbCritico: 0
   deltaRoboVida: 0
   appearanceWeight: 1

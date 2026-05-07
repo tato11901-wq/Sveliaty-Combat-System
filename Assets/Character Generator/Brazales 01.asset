@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a19c9057ab7e59644b4b9c5a0c89f2bb, type: 3}
+  m_Name: Brazales 01
+  m_EditorClassIdentifier: 
+  pieceName: Brazo 01
+  sourceAbility: {fileID: 11400000, guid: 879ac6e11ee7f3d4eb2019b6f6de238e, type: 2}
+  prefab: {fileID: 8312205953654762073, guid: 0f5da89a161a627488f21c139f5b9cb8, type: 3}

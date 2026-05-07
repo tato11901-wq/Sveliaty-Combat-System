@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58b1d100c8094f04489e59c46ba00e41, type: 3}
+  m_Name: "Ara\xF1a Mutante"
+  m_EditorClassIdentifier: 
+  displayName: "Ara\xF1a Mutante"
+  sprite: {fileID: 21300000, guid: 1c67b247fc3f9654d9115189ffd30a3f, type: 3}
+  affinityType: 0
+  affinityRelations:
+  - type: 0
+    multiplier: 0
+  - type: 1
+    multiplier: 2
+  - type: 2
+    multiplier: 3
+  baseRPGLife: 60
+  baseRPGDiceCount: 3
+  baseFailureDamage: 10
+  baseMaxAttempts: 5
+  healChance: 0
+  armorChance: 0
+  thornsChance: 0
+  speedChance: 60
+  doNothingChance: 40
+  healAmount: 0
+  armorAmount: 0
+  thornsAmount: 0
+  speedAmount: 0.5
+  tierLifeMultipliers:
+  - 1
+  - 1.6
+  - 2.5
+  - 4
+  tierDamageMultipliers:
+  - 1
+  - 1.4
+  - 2
+  - 3
+  tierAttemptBonuses: 00000000010000000200000003000000

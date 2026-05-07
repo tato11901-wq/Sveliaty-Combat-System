@@ -29,12 +29,24 @@ namespace Sveliaty.UI.V2
         private static readonly string COLOR_CRITICAL = "#4FC3F7"; // Azul brillante - golpe crítico
         private static readonly string COLOR_AFFINITY = "#FF5252"; // Rojo brillante - súper efectivo (afinidad)
 
-        public void LogAttackResult(string abilityName, int roll, int bonus, int total, float multiplier, bool isCritical = false, float affinityMultiplier = 1f)
+        public void LogAttackResult(string abilityName, int roll, int bonus, int total, float multiplier, bool isCritical = false, float affinityMultiplier = 1f, bool isFirstStrike = false)
         {
             // Construir etiquetas de estado
             string tags = "";
             if (affinityMultiplier >= 1.5f)
-                tags += $" <color={COLOR_AFFINITY}>¡SÚPER EFECTIVO!</color>";
+            {
+                if (isFirstStrike)
+                {
+                    if (affinityMultiplier >= 2f)
+                        tags += $" <color={COLOR_AFFINITY}>¡SÚPER EFECTIVO x2 (GOLPE CERTERO)!</color>";
+                    else
+                        tags += $" <color={COLOR_AFFINITY}>¡SÚPER EFECTIVO (GOLPE CERTERO)!</color>";
+                }
+                else
+                {
+                    tags += $" <color={COLOR_AFFINITY}>¡SÚPER EFECTIVO!</color>";
+                }
+            }
             else if (affinityMultiplier <= 0.5f && affinityMultiplier > 0f)
                 tags += $" <color={COLOR_INFO}>(Resistido)</color>";
             else if (affinityMultiplier == 0f)

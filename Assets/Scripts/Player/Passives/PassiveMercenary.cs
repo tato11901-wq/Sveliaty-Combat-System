@@ -11,7 +11,7 @@ namespace Sveliaty.Passives
         private void Reset()
         {
             passiveName = "Mercenario";
-            description = "Tu daño base se reduce a la mitad, pero ganas daño extra igual a la mitad de tu tinta actual.\nContra: Ganas un 50% menos de tinta.";
+            description = "Tu daño base se reduce a la mitad, pero ganas daño extra igual al 10% de tu tinta actual.\nContra: Ganas un 50% menos de tinta.";
             profile = PassiveProfile.MuyBuenaConContra;
         }
 
@@ -23,14 +23,14 @@ namespace Sveliaty.Passives
         public override void ModifyDamageDealt(ref int damageDealt)
         {
             // Reduce base damage by half (ignoring cards/objects, simplifying to halving total raw output)
-            // But uses half of current ink as damage bonus
+            // But uses 10% of current ink as damage bonus
             
             int baseReduced = damageDealt / 2;
             int inkBonus = 0;
             
             if (cachedPlayer != null)
             {
-                inkBonus = cachedPlayer.GetInk() / 2;
+                inkBonus = cachedPlayer.GetInk() / 10;
             }
 
             damageDealt = baseReduced + inkBonus;

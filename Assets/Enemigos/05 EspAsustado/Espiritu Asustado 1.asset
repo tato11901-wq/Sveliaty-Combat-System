@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Espiritu Asustado 1
   m_EditorClassIdentifier: 
   enemyTier: 0
-  sprite: {fileID: 21300000, guid: 2ecc2819ecc9b204a816cce75319aea1, type: 3}
-  healthThreshold: 20
-  diceCount: 3
-  maximunDiceThrow: 2
-  failureDamage: 0
+  sprite: {fileID: 21300000, guid: 0c2eeb26739c1d346af2bf462f2c80ff, type: 3}
   RPGLife: 30
   RPGDiceCount: 3
+  failureDamage: 5
+  maximunDiceThrow: 2
+  healChance: 0
+  armorChance: 0
+  thornsChance: 10
+  speedChance: 0
+  doNothingChance: 60
+  healAmount: 0
+  armorAmount: 0
+  thornsAmount: 0.1
+  speedAmount: 0

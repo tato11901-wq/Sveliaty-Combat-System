@@ -19,7 +19,7 @@ public class CombatManager : MonoBehaviour
     public PlayerStatsManager statsManager; 
 
     [Header("Combat Settings")]
-    [Range(0, 100)] public float randomCardChance = 30f;
+    [Range(0, 100)] public float randomCardChance = 50f;
 
     // Estado del combate ACTUAL
     private EnemyInstance currentEnemy;
@@ -27,6 +27,8 @@ public class CombatManager : MonoBehaviour
     private int pendingCardSelections = 0;
     private bool isProcessingPostCombat = false;
     private bool isEliteRound = false; // Ronda élite (posición 5 en progresión, no el flag isSpirit del enemigo)
+    
+    public int LastInkReward { get; private set; }
 
     // Estado del TURNO
     private TurnPhase currentPhase;
@@ -36,7 +38,7 @@ public class CombatManager : MonoBehaviour
 
     // === EVENTOS PARA LA UI ===
     public event Action<EnemyInstance> OnCombatStart;
-    public event Action<int, int, int, float, bool, float> OnAttackResult; // roll, bonus, total, multiplier, isCritical, affinityMult
+    public event Action<int, int, int, float, bool, float, bool> OnAttackResult; // roll, bonus, total, multiplier, isCritical, affinityMult, isFirstStrike
     public event Action<bool, int, AffinityType, int> OnCombatEnd; 
     public event Action<int> OnAttemptsChanged;
     public event Action<int> OnWaitingForCardSelection;
@@ -120,21 +122,77 @@ public class CombatManager : MonoBehaviour
         return null;
     }
 
-    public float GetAffinityMultiplier(AffinityType attackType)
+    /// <summary>
+    /// Inicia un combate contra un enemigo élite. El tier (1-4) determina el escalado
+    /// de stats desde el SO. No aplica bossStatsMultiplier adicional ya que el
+    /// escalado está bakeado en el EliteEnemyData.
+    /// </summary>
+    public void StartEliteCombat(EliteEnemyData eliteData, int eliteTier, int extraAttempts = 0)
     {
-        if (currentEnemy.enemyData.affinityRelations == null) return 1f;
+        currentEnemy = new EnemyInstance(eliteData, eliteTier);
+
+        if (extraAttempts > 0)
+            currentEnemy.attemptsRemaining += extraAttempts;
+
+        if (Sveliaty.Passives.PassiveManager.Instance != null)
+        {
+            int modifiedAttempts = Sveliaty.Passives.PassiveManager.Instance.GetModifiedAttempts(0);
+            currentEnemy.attemptsRemaining += modifiedAttempts;
+        }
+
+        combatEnded          = false;
+        isProcessingPostCombat = false;
+        isEliteRound         = false;
+        turnsUsedThisCombat  = 0;
+        currentTurnNumber    = 0;
+        currentPhase         = TurnPhase.TurnEnd;
+
+        if (playerManager != null && statsManager != null)
+            playerManager.SetArmor(UnityEngine.Mathf.RoundToInt(statsManager.GetFinalStat(StatType.Armadura, null)));
+
+        OnCombatStartEvent?.Invoke();
+
+        if (curseManager != null)
+            curseManager.OnPreCombat(currentEnemy);
+
+        Debug.Log($"COMBATE ÉLITE INICIADO: {eliteData.displayName} (Tier {eliteTier})");
+        OnCombatStart?.Invoke(currentEnemy);
+    }
+
+    public float GetAffinityMultiplier(AffinityType attackType, out bool fromFirstStrikePassive)
+    {
+        fromFirstStrikePassive = false;
+        if (currentEnemy.enemyData == null || currentEnemy.enemyData.affinityRelations == null) 
+        {
+            // Sin relaciones de afinidad (no debería ocurrir, pero es seguro retornar 1)
+            if (PassiveManager.Instance != null && PassiveManager.Instance.IsFirstHitAlwaysSuperEffective())
+            {
+                fromFirstStrikePassive = true;
+                return PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(1.5f);
+            }
+            return 1f;
+        }
         foreach (var relation in currentEnemy.enemyData.affinityRelations)
         {
             if (relation.type == attackType)
             {
-                if (PassiveManager.Instance != null && PassiveManager.Instance.IsFirstHitAlwaysSuperEffective())
+                bool isFirstHitPassive = PassiveManager.Instance != null && PassiveManager.Instance.IsFirstHitAlwaysSuperEffective();
+
+                if (relation.multiplier == AffinityMultiplier.Weak)
                 {
-                    return PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(1.5f);
+                    float mult = isFirstHitPassive ? 2f : 1.5f;
+                    if (isFirstHitPassive) fromFirstStrikePassive = true;
+                    return PassiveManager.Instance != null ? PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(mult) : mult;
+                }
+                
+                if (isFirstHitPassive)
+                {
+                    fromFirstStrikePassive = true;
+                    return PassiveManager.Instance != null ? PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(1.5f) : 1.5f;
                 }
 
                 return relation.multiplier switch
                 {
-                    AffinityMultiplier.Weak => PassiveManager.Instance != null ? PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(1.5f) : 1.5f,
                     AffinityMultiplier.Neutral => 1f,
                     AffinityMultiplier.Strong => 0.5f,
                     AffinityMultiplier.Immune => 0f,
@@ -142,6 +200,14 @@ public class CombatManager : MonoBehaviour
                 };
             }
         }
+        
+        // Si no se encontró en la lista pero tiene el pasivo de primer golpe
+        if (PassiveManager.Instance != null && PassiveManager.Instance.IsFirstHitAlwaysSuperEffective())
+        {
+            fromFirstStrikePassive = true;
+            return PassiveManager.Instance.GetModifiedSuperEffectiveMultiplier(1.5f);
+        }
+
         return 1f;
     }
 
@@ -152,7 +218,7 @@ public class CombatManager : MonoBehaviour
         return total;
     }
 
-    public void RegisterAttackResult(int roll, int statBonus, int totalFinal, float multiplier, bool isCritical = false, float affinityMultiplier = 1f)
+    public void RegisterAttackResult(int roll, int statBonus, int totalFinal, float multiplier, bool isCritical = false, float affinityMultiplier = 1f, bool isFirstStrike = false)
     {
         if (PassiveManager.Instance != null)
         {
@@ -172,7 +238,7 @@ public class CombatManager : MonoBehaviour
             EndCombat(true, playerManager.GetScore(), multiplier);
         }
 
-        OnAttackResult?.Invoke(roll, statBonus, totalFinal, multiplier, isCritical, affinityMultiplier);
+        OnAttackResult?.Invoke(roll, statBonus, totalFinal, multiplier, isCritical, affinityMultiplier, isFirstStrike);
     }
     
     public void NotifyAttemptsChanged()
@@ -306,9 +372,9 @@ public class CombatManager : MonoBehaviour
 
         if (randomVal < data.healChance)
         {
-            int healAmount = UnityEngine.Random.Range(10, 25);
+            int healAmount = Mathf.RoundToInt(currentEnemy.maxRPGHealth * data.healAmount);
             currentEnemy.currentRPGHealth += healAmount;
-            if (currentEnemy.currentRPGHealth > currentEnemy.maxRPGHealth) 
+            if (currentEnemy.currentRPGHealth > currentEnemy.maxRPGHealth)
                 currentEnemy.currentRPGHealth = currentEnemy.maxRPGHealth;
             actionDescription = $"Se cura {healAmount} de vida. (HP: {currentEnemy.currentRPGHealth})";
             Debug.Log($"El enemigo se curó {healAmount} de vida.");
@@ -316,22 +382,21 @@ public class CombatManager : MonoBehaviour
         }
         else if (randomVal < data.healChance + data.armorChance)
         {
-            int armorGained = UnityEngine.Random.Range(10, 20);
-            currentEnemy.activeArmor += armorGained;
-            actionDescription = $"Gana {armorGained} de Armadura. (Total: {currentEnemy.activeArmor})";
-            Debug.Log($"El enemigo ganó armadura. Armadura actual: {currentEnemy.activeArmor}");
+            currentEnemy.activeArmor += data.armorAmount;
+            actionDescription = $"Gana {data.armorAmount} de Armadura. (Total: {currentEnemy.activeArmor})";
+            Debug.Log($"El enemigo ganó {data.armorAmount} armadura. Armadura actual: {currentEnemy.activeArmor}");
         }
         else if (randomVal < data.healChance + data.armorChance + data.thornsChance)
         {
-            currentEnemy.activeThorns = UnityEngine.Random.Range(0.1f, 0.3f);
-            actionDescription = $"Activa Espinas ({currentEnemy.activeThorns * 100:F0}% daño reflejado).";
-            Debug.Log($"El enemigo activó Espinas ({currentEnemy.activeThorns * 100}% de daño reflejado).");
+            currentEnemy.activeThorns = data.thornsAmount;
+            actionDescription = $"Activa Espinas ({data.thornsAmount * 100:F0}% daño reflejado).";
+            Debug.Log($"El enemigo activó Espinas ({data.thornsAmount * 100}% de daño reflejado).");
         }
         else if (randomVal < data.healChance + data.armorChance + data.thornsChance + data.speedChance)
         {
-            currentEnemy.hasSpeedEvasion = true;
-            actionDescription = "Activa Velocidad. Puede evadir el próximo ataque.";
-            Debug.Log($"El enemigo activó Velocidad. Su próximo ataque podría ser evadido.");
+            currentEnemy.activeSpeedEvasion = data.speedAmount;
+            actionDescription = $"Activa Velocidad. Probabilidad de evadir el próximo ataque: {data.speedAmount * 100:F0}%.";
+            Debug.Log($"El enemigo activó Velocidad ({data.speedAmount * 100}% evasión).");
         }
         else
         {
@@ -403,9 +468,16 @@ public class CombatManager : MonoBehaviour
             
             if (PassiveManager.Instance != null)
             {
-                inkReward = PassiveManager.Instance.GetModifiedInkReward(inkReward, currentEnemy.enemyData.isSpirit);
+                inkReward = PassiveManager.Instance.GetModifiedInkReward(inkReward, isEliteRound);
+            }
+
+            if (curseManager != null && curseManager.HasRewardBlock())
+            {
+                inkReward = 0;
+                Debug.Log("[CombatManager] Recompensa de tinta bloqueada por maldición.");
             }
             
+            LastInkReward = inkReward;
             playerManager.AddInk(inkReward);
 
             int randomCardsToGive = wasSuperEffective ? 1 : 0;
@@ -423,6 +495,13 @@ public class CombatManager : MonoBehaviour
                 {
                     randomCardsToGive++;
                 }
+            }
+
+            if (curseManager != null && curseManager.HasRewardBlock())
+            {
+                randomCardsToGive = 0;
+                choiceCardsToGive = 0;
+                Debug.Log("[CombatManager] Recompensas de cartas bloqueadas por maldición.");
             }
 
             // Entregar cartas aleatorias
@@ -528,6 +607,13 @@ public class CombatManager : MonoBehaviour
     public void ContinueToCardSelection(int score)
     {
         Debug.Log($"[CombatManager] ContinueToCardSelection. pendingCardSelections={pendingCardSelections}, score={score}");
+        
+        if (PassiveManager.Instance != null && !PassiveManager.Instance.CanGainCards())
+        {
+            pendingCardSelections = 0;
+            Debug.Log("[CombatManager] El jugador no puede ganar más cartas. Omitiendo selección.");
+        }
+
         if (pendingCardSelections > 0)
         {
             Debug.Log("[CombatManager] Disparando OnWaitingForCardSelection");
@@ -548,13 +634,23 @@ public class CombatManager : MonoBehaviour
 
     public int CalculateScorePerCombat(float multiplier)
     {
-        int Newscore = 0;
-        if(currentEnemy.enemyTierData.enemyTier == EnemyTier.Tier_1) Newscore = 1;
-        else if(currentEnemy.enemyTierData.enemyTier == EnemyTier.Tier_2) Newscore = 2;
-        else if(currentEnemy.enemyTierData.enemyTier == EnemyTier.Tier_3) Newscore = 3;
+        int score;
 
-        if(multiplier >= 1.5f) Newscore += 1;
-        return Newscore;
+        // Los élites dan score extra proporcional a su tier (T1=4, T2=5, T3=6, T4=7)
+        if (currentEnemy.IsElite)
+        {
+            score = 3 + currentEnemy.eliteTierLevel;
+        }
+        else
+        {
+            score = 0;
+            if (currentEnemy.enemyTierData.enemyTier == EnemyTier.Tier_1) score = 1;
+            else if (currentEnemy.enemyTierData.enemyTier == EnemyTier.Tier_2) score = 2;
+            else if (currentEnemy.enemyTierData.enemyTier == EnemyTier.Tier_3) score = 3;
+        }
+
+        if (multiplier >= 1.5f) score += 1;
+        return score;
     }
 
     public bool ShouldShowCurseEvent()
@@ -596,6 +692,8 @@ public class CombatManager : MonoBehaviour
         if (currentEnemy == null) return 0;
         return playerManager.GetCards(AffinityType.Fuerza);
     }
+    
+    public int PendingCardSelections => pendingCardSelections;
 
     // === MÉTODOS OBSOLETOS PARA RETROCOMPATIBILIDAD CON UI ANTIGUA ===
     [Obsolete("El combate ahora siempre opera bajo la lógica TraditionalRPG.")]

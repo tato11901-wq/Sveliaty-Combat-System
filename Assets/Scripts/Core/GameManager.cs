@@ -102,34 +102,49 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Run terminada - Score: " + finalScore + ", Enemigos: " + enemiesDefeated);
 
-        // Si se derrotaron todos los enemigos (Boss), es una victoria
+        // Si se derrotaron todos los enemigos → Victoria final
         if (bossRushManager != null && enemiesDefeated >= bossRushManager.maxEnemiesPerRun)
         {
             gameInProgress = false;
+            RunSaveManager.ClearSavedRun();
 
-            gameplayPanel.SetActive(false);
-            gameOverPanel.SetActive(true);
-
-            if (gameOverUI == null)
+            // Empaquetar datos para la escena del personaje
+            if (PlayerManager.Instance != null && AbilityManager.Instance != null)
             {
-                Debug.LogWarning("⚠️ GameManager: gameOverUI no está asignado en el Inspector. Intentando buscarlo...");
-                if (gameOverPanel != null)
-                    gameOverUI = gameOverPanel.GetComponentInChildren<GameOverUI>(true);
-                
-                if (gameOverUI == null)
-                    gameOverUI = Object.FindObjectOfType<GameOverUI>(true);
+                Sveliaty.Core.GlobalData.PendingVictoryData = new Sveliaty.Core.VictoryData
+                {
+                    activeSkills  = AbilityManager.Instance.GetAllActiveSkillStates(),
+                    cardsFuerza   = PlayerManager.Instance.GetCards(AffinityType.Fuerza),
+                    cardsAgilidad = PlayerManager.Instance.GetCards(AffinityType.Agilidad),
+                    cardsDestreza = PlayerManager.Instance.GetCards(AffinityType.Destreza),
+                    finalScore    = finalScore
+                };
+            }
+            else
+            {
+                Debug.LogWarning("[GameManager] PlayerManager o AbilityManager.Instance son null al preparar VictoryData.");
+                Sveliaty.Core.GlobalData.PendingVictoryData = new Sveliaty.Core.VictoryData
+                {
+                    finalScore = finalScore
+                };
             }
 
-            if (gameOverUI != null && PlayerManager.Instance != null)
+            // En vez de cargar la escena directamente, mostramos el panel de Game Over en modo Victoria
+            // para que el jugador vea sus stats finales. El botón de ese panel cargará la escena del personaje.
+            
+            gameInProgress = false;
+            if (gameplayPanel != null) gameplayPanel.SetActive(false);
+            if (gameOverPanel != null) gameOverPanel.SetActive(true);
+
+            if (gameOverUI != null)
             {
-                int fCards = PlayerManager.Instance.GetCards(AffinityType.Fuerza);
-                int aCards = PlayerManager.Instance.GetCards(AffinityType.Agilidad);
-                int dCards = PlayerManager.Instance.GetCards(AffinityType.Destreza);
-
-                EnemyInstance lastBoss = combatManager != null ? combatManager.GetCurrentEnemy() : null;
-
-                // Llamar con isVictory = true, y pasando al líder final
-                gameOverUI.ShowGameOver(finalScore, fCards, aCards, dCards, lastBoss, true);
+                int f = PlayerManager.Instance != null ? PlayerManager.Instance.GetCards(AffinityType.Fuerza) : 0;
+                int a = PlayerManager.Instance != null ? PlayerManager.Instance.GetCards(AffinityType.Agilidad) : 0;
+                int d = PlayerManager.Instance != null ? PlayerManager.Instance.GetCards(AffinityType.Destreza) : 0;
+                
+                EnemyInstance currentEnemy = combatManager != null ? combatManager.GetCurrentEnemy() : null;
+                
+                gameOverUI.ShowGameOver(finalScore, f, a, d, currentEnemy, true);
             }
         }
     }
@@ -152,7 +167,7 @@ public class GameManager : MonoBehaviour
     public void RestartGame()
     {
         Debug.Log("Reiniciando juego...");
-        UnityEngine.SceneManagement.SceneManager.LoadScene("StartScene"); // Asumiendo que así se llama
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Main Menu");
     }
 
     // GETTERS

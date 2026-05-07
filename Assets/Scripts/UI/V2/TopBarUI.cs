@@ -24,7 +24,12 @@ namespace Sveliaty.UI.V2
             if (enemy == null) return;
 
             if (enemyNameText != null)
-                enemyNameText.text = enemy.enemyData.displayName;
+            {
+                if (enemy.IsElite)
+                    enemyNameText.text = $"<color=#DC143C>{enemy.enemyData.displayName}</color>";
+                else
+                    enemyNameText.text = enemy.enemyData.displayName;
+            }
 
             if (runProgressText != null)
             {

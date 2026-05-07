@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: Slime1
   m_EditorClassIdentifier: 
   enemyTier: 0
-  sprite: {fileID: 21300000, guid: 31558d523fbd0d549a9278379c9b7ea0, type: 3}
-  healthThreshold: 6
-  diceCount: 2
+  sprite: {fileID: 21300000, guid: 5311f0a7e9293e74b8a5b2e30c037dd1, type: 3}
+  RPGLife: 20
+  RPGDiceCount: 2
+  failureDamage: 2
   maximunDiceThrow: 2
-  failureDamage: 5
-  RPGLife: 30
-  RPGDiceCount: 3
+  healChance: 10
+  armorChance: 0
+  thornsChance: 0
+  speedChance: 0
+  doNothingChance: 0
+  healAmount: 0.1
+  armorAmount: 0
+  thornsAmount: 0
+  speedAmount: 0

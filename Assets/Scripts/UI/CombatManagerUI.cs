@@ -497,7 +497,7 @@ private void OnDisable()
         vidaText.text = enemy.currentRPGHealth.ToString();
 
         intentosText.text = enemy.attemptsRemaining.ToString();
-        dadosText.text = enemy.diceCount.ToString();
+        dadosText.text = enemy.currentRPGDiceCount.ToString();
 
         // Mostrar nombre + buffs activos en la UI
         UpdateEnemyNameWithBuffs();
@@ -565,7 +565,7 @@ private void OnDisable()
         return " ";
     }
 
-    void HandleAttackResult(int roll, int bonus, int total, float multiplier, bool isCritical, float affinityMultiplier)
+    void HandleAttackResult(int roll, int bonus, int total, float multiplier, bool isCritical, float affinityMultiplier, bool isFirstStrike)
     {
         resultadoDadosText.text = roll.ToString();
         

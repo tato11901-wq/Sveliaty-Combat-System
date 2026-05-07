@@ -26,7 +26,7 @@ namespace Sveliaty.Passives
         {
             if (combatManager.playerManager != null)
             {
-                combatManager.playerManager.ModifyHealth(-2);
+                combatManager.playerManager.ModifyHealth(-2, true);
                 Debug.Log("[Pasiva] Daño de 2 HP al iniciar turno.");
             }
         }
