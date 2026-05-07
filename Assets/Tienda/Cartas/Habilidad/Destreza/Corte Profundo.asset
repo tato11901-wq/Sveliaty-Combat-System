@@ -17,7 +17,7 @@ MonoBehaviour:
     el ataque, si falla, quedas expuesto perdiendo 10 de vida
   affinityType: 2
   icon: {fileID: 0}
-  cardCost: 3
+  cardCost: 2
   healthCost: 0
   turnCost: 0
   diceModifier: 0

@@ -64,6 +64,11 @@ namespace Sveliaty.UI.V2
 
                     slot.button.onClick.RemoveAllListeners();
                     slot.button.onClick.AddListener(() => OnPassiveSelected(passive));
+                    
+                    if (slot.button.GetComponent<GenericHoverEffect>() == null)
+                    {
+                        slot.button.gameObject.AddComponent<GenericHoverEffect>();
+                    }
                 }
                 else
                 {

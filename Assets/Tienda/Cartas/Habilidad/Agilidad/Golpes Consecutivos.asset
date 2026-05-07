@@ -12,11 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e33a6405f87f93346a1dedaa83ee2ed7, type: 3}
   m_Name: Golpes Consecutivos
   m_EditorClassIdentifier: 
-  abilityName: 
-  description: 
+  abilityName: Golpes Consecutivos
+  description: "Golpes agiles consecutivos, consumes cartas a cambio de un ataque
+    b\xE1sico mucho m\xE1s fuerte"
   affinityType: 1
   icon: {fileID: 0}
-  cardCost: 0
+  cardCost: 2
   healthCost: 0
   turnCost: 0
   diceModifier: 0
@@ -24,7 +25,7 @@ MonoBehaviour:
   diceMultiplier: 0
   diceAddition: 0
   affinityMultiplierBonus: 0
-  cardMultiplier: 0
+  cardMultiplier: 1.5
   hasSuccessChance: 0
   successChance: 0
   hasOnKillEffect: 0

@@ -13,14 +13,14 @@ MonoBehaviour:
   m_Name: Cura 1
   m_EditorClassIdentifier: 
   curseName: Curacion
-  description: Regenaras 1 punto de vida
+  description: Regenaras 5 punto de vida
   type: 0
   icon: {fileID: 21300000, guid: 6e976b0adc70e964899f1ec02569f707, type: 3}
   activationType: 0
   requiresPlayerActivation: 0
   mustActivateOnTurnOne: 0
   effectType: 0
-  effectValue: 1
+  effectValue: 5
   duration: 0
   passiveOnly: 0
   rpgOnly: 0

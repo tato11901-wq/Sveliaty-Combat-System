@@ -62,6 +62,12 @@ namespace Sveliaty.UI.V2
                 SetupAbilitySlot(slot);
 
             buyButton?.onClick.AddListener(OnBuyClicked);
+            
+            // Añadir efecto de hover si no existe
+            if (buyButton != null && buyButton.GetComponent<GenericHoverEffect>() == null)
+            {
+                buyButton.gameObject.AddComponent<GenericHoverEffect>();
+            }
         }
 
         private void SetupItemSlot(ShopSlot slot)

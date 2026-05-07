@@ -26,7 +26,8 @@ public class CombatManager : MonoBehaviour
     private bool combatEnded = false;
     private int pendingCardSelections = 0;
     private bool isProcessingPostCombat = false;
-    private bool isEliteRound = false; // Ronda élite (posición 5 en progresión, no el flag isSpirit del enemigo)
+    private bool isEliteRound = false; 
+    private bool isFinalBoss = false; 
     
     public int LastInkReward { get; private set; }
 
@@ -61,6 +62,11 @@ public class CombatManager : MonoBehaviour
         isEliteRound = isElite;
     }
 
+    public void SetFinalBoss(bool isFinal)
+    {
+        isFinalBoss = isFinal;
+    }
+
     private void Start()
     {
         if (PassiveManager.Instance != null)
@@ -90,6 +96,7 @@ public class CombatManager : MonoBehaviour
         combatEnded = false;
         isProcessingPostCombat = false;
         isEliteRound = false;
+        isFinalBoss = false;
         turnsUsedThisCombat = 0;
         currentTurnNumber = 0;
         currentPhase = TurnPhase.TurnEnd; 
@@ -143,6 +150,7 @@ public class CombatManager : MonoBehaviour
         combatEnded          = false;
         isProcessingPostCombat = false;
         isEliteRound         = false;
+        isFinalBoss          = false;
         turnsUsedThisCombat  = 0;
         currentTurnNumber    = 0;
         currentPhase         = TurnPhase.TurnEnd;
@@ -480,21 +488,52 @@ public class CombatManager : MonoBehaviour
             LastInkReward = inkReward;
             playerManager.AddInk(inkReward);
 
-            int randomCardsToGive = wasSuperEffective ? 1 : 0;
-            int choiceCardsToGive = wasSuperEffective ? 1 : 0;
+            int randomCardsToGive = 0;
+            int choiceCardsToGive = 0;
+            
+            bool isElite = currentEnemy.IsElite;
+            EnemyTier tier = currentEnemy.enemyTierData.enemyTier;
 
+            if (isElite)
+            {
+                // Élite: 5 random, +1 de elección si fue con afinidad
+                randomCardsToGive = 5;
+                if (wasSuperEffective) choiceCardsToGive = 1;
+            }
+            else if (tier == EnemyTier.Tier_2 || tier == EnemyTier.Tier_3)
+            {
+                // Tier 2 y 3: 2 cartas totales
+                if (wasSuperEffective)
+                {
+                    choiceCardsToGive = 1;
+                    randomCardsToGive = 1;
+                }
+                else
+                {
+                    randomCardsToGive = 2;
+                }
+            }
+            else // Tier 1
+            {
+                if (wasSuperEffective)
+                {
+                    choiceCardsToGive = 1;
+                    randomCardsToGive = 1;
+                }
+                else
+                {
+                    float prob = PassiveManager.Instance != null ? PassiveManager.Instance.GetModifiedCardRewardProb(randomCardChance) : randomCardChance;
+                    if (UnityEngine.Random.Range(0f, 100f) < prob)
+                    {
+                        randomCardsToGive = 1;
+                    }
+                }
+            }
+
+            // Aplicar modificadores de pasivas a las cantidades finales
             if (PassiveManager.Instance != null)
             {
                 PassiveManager.Instance.GetModifiedCardRewardAmount(ref randomCardsToGive, ref choiceCardsToGive, wasSuperEffective);
-            }
-
-            if (!wasSuperEffective)
-            {
-                float prob = PassiveManager.Instance != null ? PassiveManager.Instance.GetModifiedCardRewardProb(randomCardChance) : randomCardChance;
-                if (UnityEngine.Random.Range(0f, 100f) < prob)
-                {
-                    randomCardsToGive++;
-                }
             }
 
             if (curseManager != null && curseManager.HasRewardBlock())
@@ -546,6 +585,14 @@ public class CombatManager : MonoBehaviour
             else
             {
                 int damage = currentEnemy.failureDamage;
+                
+                // Si es el jefe final, el daño de fallo es letal instantáneamente
+                if (isFinalBoss)
+                {
+                    damage = playerManager.GetCurrentLife();
+                    Debug.Log("[CombatManager] ¡Derrota ante el Jefe Final! Daño letal aplicado.");
+                }
+
                 if (damage >= playerManager.GetCurrentLife())
                 {
                     bool deathNegated = curseManager != null && curseManager.CheckAndConsumeDeathNegation();

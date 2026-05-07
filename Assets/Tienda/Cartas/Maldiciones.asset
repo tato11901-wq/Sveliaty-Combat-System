@@ -13,18 +13,24 @@ MonoBehaviour:
   m_Name: Maldiciones
   m_EditorClassIdentifier: 
   allCurses:
+  - {fileID: 11400000, guid: f17d64e33a6333446bb185039be8ff12, type: 2}
+  - {fileID: 11400000, guid: 3217976278e9ac547be5d91bd214adf1, type: 2}
+  - {fileID: 11400000, guid: b64033637cb7dc04d8de95336bb52551, type: 2}
   - {fileID: 11400000, guid: 3d87fa48d8de35f4983e39bcd0b7988c, type: 2}
   - {fileID: 11400000, guid: 75b8f680b7402b2458ff10a436918b92, type: 2}
   - {fileID: 11400000, guid: 549583f57d519d04db650bdefb316994, type: 2}
   - {fileID: 11400000, guid: 63ecfa9fa5dd5514b9c6ea83fd61d6f3, type: 2}
   - {fileID: 11400000, guid: c6448325d9adb584b8c8cf54e12c69ef, type: 2}
-  - {fileID: 11400000, guid: e25cd19f238930140962eb0b0b12e9e4, type: 2}
-  - {fileID: 11400000, guid: 5e55068e126b36541a411909503f72f8, type: 2}
-  - {fileID: 11400000, guid: 29ade6cea8b6fa34ebf52e0716e754e0, type: 2}
+  - {fileID: 11400000, guid: 30e45a35172b72f458b34b578ffbda56, type: 2}
+  - {fileID: 11400000, guid: f9274de6aaf615f429f68c7210f2beaa, type: 2}
+  - {fileID: 11400000, guid: 8c4e837ff4b2414468707e674442b7d1, type: 2}
   - {fileID: 11400000, guid: bd64d74fd87bd6e4185b8e9cb90b86f4, type: 2}
   - {fileID: 11400000, guid: e0f6f32adabbad4489f1fe9dbff7a565, type: 2}
   - {fileID: 11400000, guid: 6732c9ef02e188c41addeaee417d0e36, type: 2}
-  - {fileID: 11400000, guid: 30e45a35172b72f458b34b578ffbda56, type: 2}
-  - {fileID: 11400000, guid: 4c1d4e32565752d4784f8e40217d3837, type: 2}
+  - {fileID: 11400000, guid: de870dccc26da7d4b8afbe2126eae84c, type: 2}
+  - {fileID: 11400000, guid: c1a968c7e0c38274b9fecbc20064ce66, type: 2}
+  - {fileID: 11400000, guid: e25cd19f238930140962eb0b0b12e9e4, type: 2}
+  - {fileID: 11400000, guid: 5e55068e126b36541a411909503f72f8, type: 2}
+  - {fileID: 11400000, guid: 29ade6cea8b6fa34ebf52e0716e754e0, type: 2}
   - {fileID: 11400000, guid: 09187b77a6cc1b54fba3f982b476fd5d, type: 2}
-  - {fileID: 11400000, guid: f17d64e33a6333446bb185039be8ff12, type: 2}
+  - {fileID: 11400000, guid: 4c1d4e32565752d4784f8e40217d3837, type: 2}

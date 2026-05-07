@@ -83,7 +83,7 @@ namespace Sveliaty.UI.V2
                 descText.text = $"+1 Punto pasivo de {affinity}";
 
             if (costText != null)
-                costText.text = "Recompensa";
+                costText.text = "";
         }
 
         /// <summary>

@@ -23,7 +23,7 @@ MonoBehaviour:
     -3 Destreza
 
     +4 %Prob. Critico'
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 32a6ce91540fcfe46a7da29416037e88, type: 3}
   baseInkPrice: 50
   deltaFuerza: 0
   deltaVelocidad: 5

@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "Una m\xE1scara ligera cubierta por vendas oscuras. Obliga al portador
     a confiar \xFAnicamente en sus reflejos; cada golpe preciso parece arrancar vitalidad
     del enemigo.\n\n-1 Fuerza\n+3 Destreza\n+1 Robo de vida"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4366fd9496d6d694e9fab88a1cec6f55, type: 3}
   baseInkPrice: 30
   deltaFuerza: -1
   deltaVelocidad: 0

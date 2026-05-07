@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "Pesados guantes reforzados con placas met\xE1licas. Cada golpe es
     brutal, aunque el peso ralentiza los movimientos del portador.\n\n+3 Fuerza\n-2
     Velocidad\n+5 Armadura"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8493a340e840b2b458efed74e766b01b, type: 3}
   baseInkPrice: 50
   deltaFuerza: 3
   deltaVelocidad: -2

@@ -169,9 +169,14 @@ public class BossRushManager : MonoBehaviour
                 eliteExtraAttempts = Sveliaty.Passives.PassiveManager.Instance.GetModifiedAttempts(eliteExtraAttempts);
 
             if (currentNodeIndex >= maxEnemiesPerRun - 1)
+            {
                 Debug.Log($"BOSS FINAL (Élite Tier {eliteTier}): {eliteData.displayName}");
+                combatManager.SetFinalBoss(true);
+            }
             else
+            {
                 Debug.Log($"BOSS DE ZONA (Élite Tier {eliteTier}): {eliteData.displayName}");
+            }
 
             combatManager.StartEliteCombat(eliteData, eliteTier, eliteExtraAttempts);
             combatManager.SetEliteRound(true);
@@ -236,6 +241,9 @@ public class BossRushManager : MonoBehaviour
 
         if (combatManager != null)
         {
+            if (currentNodeIndex >= maxEnemiesPerRun - 1)
+                combatManager.SetFinalBoss(true);
+                
             combatManager.StartCombat(enemyData, tier, defaultMode, currentMultiplier, extraAttempts);
             if (isBoss) combatManager.SetEliteRound(true);
         }

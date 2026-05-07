@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb13d52ba97f6624a9acc67f9df3c4e1, type: 3}
-  m_Name: Gambling Dice
+  m_Name: Aumentar vida 1
   m_EditorClassIdentifier: 
-  curseName: Dados Reducidos!
-  description: Durante el siguiente combate, tus dados seran de 10 caras
-  type: 2
+  curseName: Aumentar Vida Maxima
+  description: Tu vida maxima aumenta en 10 puntos
+  type: 0
   icon: {fileID: 0}
-  activationType: 1
+  activationType: 0
   requiresPlayerActivation: 0
   mustActivateOnTurnOne: 0
-  effectType: 10
+  effectType: 1
   effectValue: 10
   duration: 0
   passiveOnly: 0

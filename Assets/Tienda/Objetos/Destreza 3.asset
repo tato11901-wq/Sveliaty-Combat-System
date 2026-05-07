@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "Fragmentos blancos cubren el rostro del usuario. Su cuerpo se vuelve
     m\xE1s fr\xE1gil y ligero, ejecutando ataques r\xE1pidos y precisos que absorben
     la esencia rival.\n\n-3 Fuerza\n+6 Destreza\n+3 Robo de Vida"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4366fd9496d6d694e9fab88a1cec6f55, type: 3}
   baseInkPrice: 50
   deltaFuerza: -3
   deltaVelocidad: 0

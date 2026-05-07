@@ -17,7 +17,7 @@ MonoBehaviour:
     pero si el turno se consume, pierdes 2 de vida.
   affinityType: 1
   icon: {fileID: 0}
-  cardCost: 5
+  cardCost: 1
   healthCost: 0
   turnCost: 0
   diceModifier: 0
@@ -35,6 +35,6 @@ MonoBehaviour:
   onFailTurnPenalty: 0
   canAvoidTurnConsumption: 1
   avoidTurnChance: 50
-  avoidTurnFailPenalty: 1
-  unlockRequirement: 10
+  avoidTurnFailPenalty: 2
+  unlockRequirement: 0
   isBasicAbility: 0

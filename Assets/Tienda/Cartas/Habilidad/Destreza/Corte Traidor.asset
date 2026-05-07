@@ -12,18 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e33a6405f87f93346a1dedaa83ee2ed7, type: 3}
   m_Name: Corte Traidor
   m_EditorClassIdentifier: 
-  abilityName: 
-  description: 
-  affinityType: 0
+  abilityName: Corte Traidor
+  description: "Cortes h\xE1biles a traici\xF3n, consumes cartas a cambio de un ataque
+    b\xE1sico mucho m\xE1s fuerte"
+  affinityType: 2
   icon: {fileID: 0}
-  cardCost: 0
+  cardCost: 2
   healthCost: 0
   turnCost: 0
   diceModifier: 0
   diceMaxValue: 0
   diceMultiplier: 0
   diceAddition: 0
-  affinityMultiplierBonus: 0
+  affinityMultiplierBonus: 1.5
   cardMultiplier: 0
   hasSuccessChance: 0
   successChance: 0

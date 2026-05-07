@@ -68,8 +68,8 @@ namespace Sveliaty.UI.V2
 
             // Instanciar las 3 opciones
             CreateRewardOption(AffinityType.Fuerza, 0);
-            CreateRewardOption(AffinityType.Agilidad, 1);
-            CreateRewardOption(AffinityType.Destreza, 2);
+            CreateRewardOption(AffinityType.Destreza, 1);
+            CreateRewardOption(AffinityType.Agilidad, 2);
         }
 
         private void CreateRewardOption(AffinityType type, int index)
@@ -104,6 +104,7 @@ namespace Sveliaty.UI.V2
             if (btn != null)
             {
                 btn.onClick.AddListener(() => OnRewardSelected(type));
+                cardObj.AddComponent<GenericHoverEffect>();
             }
         }
 

@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "Parecen vac\xEDos por dentro, pero pesan como roca. Amplifican la
     potencia de cada ataque y convierten el cuerpo en una muralla lenta.\n\n+4 Fuerza\n-2
     Velocidad\n+3 Armadura"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8493a340e840b2b458efed74e766b01b, type: 3}
   baseInkPrice: 50
   deltaFuerza: 4
   deltaVelocidad: -2

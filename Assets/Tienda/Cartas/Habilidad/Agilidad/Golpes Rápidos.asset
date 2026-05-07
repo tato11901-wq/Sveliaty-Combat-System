@@ -17,7 +17,7 @@ MonoBehaviour:
     y uno adicional"
   affinityType: 1
   icon: {fileID: 0}
-  cardCost: 3
+  cardCost: 2
   healthCost: 0
   turnCost: 0
   diceModifier: 0
@@ -36,5 +36,5 @@ MonoBehaviour:
   canAvoidTurnConsumption: 0
   avoidTurnChance: 0
   avoidTurnFailPenalty: 0
-  unlockRequirement: 5
+  unlockRequirement: 0
   isBasicAbility: 0

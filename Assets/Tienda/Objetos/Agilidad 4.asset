@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "Una prenda flexible dise\xF1ada para exploradores agresivos. Favorece
     desplazamientos r\xE1pidos y ataques cr\xEDticos inesperados.\n\n+3 Velocidad\n-1
     Destreza\n+2 %Prob. Critico"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 32a6ce91540fcfe46a7da29416037e88, type: 3}
   baseInkPrice: 50
   deltaFuerza: 0
   deltaVelocidad: 3

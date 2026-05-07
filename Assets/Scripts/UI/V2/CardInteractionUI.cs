@@ -33,13 +33,22 @@ namespace Sveliaty.UI.V2
         private void Start()
         {
             if (fuerzaButton != null)
+            {
                 fuerzaButton.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Fuerza));
+                fuerzaButton.gameObject.AddComponent<GenericHoverEffect>();
+            }
 
             if (agilidadButton != null)
+            {
                 agilidadButton.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Agilidad));
+                agilidadButton.gameObject.AddComponent<GenericHoverEffect>();
+            }
 
             if (destrezaButton != null)
+            {
                 destrezaButton.onClick.AddListener(() => ShowCardsForAffinity(AffinityType.Destreza));
+                destrezaButton.gameObject.AddComponent<GenericHoverEffect>();
+            }
         }
 
         /// <summary>
@@ -108,15 +117,9 @@ namespace Sveliaty.UI.V2
                         cardBtn.onClick.AddListener(() => ExecuteAttack(ability));
 
                         // Hover effect
-                        EventTrigger trigger = cardObj.gameObject.AddComponent<EventTrigger>();
-
-                        EventTrigger.Entry enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
-                        enter.callback.AddListener(_ => cardObj.transform.DOScale(1.08f, 0.15f).SetUpdate(true));
-                        trigger.triggers.Add(enter);
-
-                        EventTrigger.Entry exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
-                        exit.callback.AddListener(_ => cardObj.transform.DOScale(1f, 0.15f).SetUpdate(true));
-                        trigger.triggers.Add(exit);
+                        var hover = cardObj.gameObject.AddComponent<GenericHoverEffect>();
+                        hover.hoverScale = 1.08f;
+                        hover.duration = 0.15f;
                     }
                 }
                 else

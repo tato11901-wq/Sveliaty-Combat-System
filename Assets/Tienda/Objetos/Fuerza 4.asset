@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "Un antiguo brazal marcado con s\xEDmbolos deformes. El usuario siente
     sus m\xFAsculos tensarse constantemente, reduciendo la velocidad de reacci\xF3n.\n\n+2
     Fuerza\n-1 Velocidad\n+2 Armadura"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 8493a340e840b2b458efed74e766b01b, type: 3}
   baseInkPrice: 50
   deltaFuerza: 2
   deltaVelocidad: -1

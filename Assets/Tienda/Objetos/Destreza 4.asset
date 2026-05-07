@@ -16,7 +16,7 @@ MonoBehaviour:
   description: "La tinta de esta m\xE1scara parece moverse lentamente. Cada esquiva
     fortalece al usuario, drenando grandes cantidades de energ\xEDa del enemigo.\n\n-1
     Fuerza\n+1 Destreza\n+5 Robo de Vida"
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 4366fd9496d6d694e9fab88a1cec6f55, type: 3}
   baseInkPrice: 50
   deltaFuerza: -1
   deltaVelocidad: 0
