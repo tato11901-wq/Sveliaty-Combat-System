@@ -98,12 +98,12 @@ public class GameManager : MonoBehaviour
         Debug.Log("Run iniciada");
     }
 
-    void HandleRunEnded(int finalScore, int enemiesDefeated)
+    void HandleRunEnded(int finalScore, int enemiesDefeated, bool victory)
     {
-        Debug.Log("Run terminada - Score: " + finalScore + ", Enemigos: " + enemiesDefeated);
+        Debug.Log($"Run terminada - Score: {finalScore}, Enemigos: {enemiesDefeated}, Victoria: {victory}");
 
-        // Si se derrotaron todos los enemigos → Victoria final
-        if (bossRushManager != null && enemiesDefeated >= bossRushManager.maxEnemiesPerRun)
+        // Si se derrotaron todos los enemigos y fue una victoria real → Victoria final
+        if (victory && bossRushManager != null && enemiesDefeated >= bossRushManager.maxEnemiesPerRun)
         {
             gameInProgress = false;
             RunSaveManager.ClearSavedRun();
@@ -167,7 +167,7 @@ public class GameManager : MonoBehaviour
     public void RestartGame()
     {
         Debug.Log("Reiniciando juego...");
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Main Menu");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
     }
 
     // GETTERS

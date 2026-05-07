@@ -53,7 +53,7 @@ public class BossRushManager : MonoBehaviour
     
     // Eventos
     public event Action<CombatMode> OnRunStarted;
-    public event Action<int, int> OnRunEnded; // (finalScore, enemiesDefeated)
+    public event Action<int, int, bool> OnRunEnded; // (finalScore, enemiesDefeated, victory)
     public event Action<int, int> OnProgressionUpdate; // (current, max) para UI
     public event Action OnShopReached; // Evento nuevo para la Tienda
 
@@ -373,9 +373,7 @@ public class BossRushManager : MonoBehaviour
         if (currentNodeIndex >= maxEnemiesPerRun)
         {
             Debug.Log("RUN COMPLETADA! Llegaste al final del calabozo.");
-            EndRun(currentScore);
-            
-            // Aquí podrías mostrar una pantalla de victoria especial
+            EndRun(currentScore, true);
         }
     }
 
@@ -395,7 +393,7 @@ public class BossRushManager : MonoBehaviour
         {
             Debug.Log("RUN COMPLETADA! Llegaste al final del calabozo.");
             int currentScore = playerManager != null ? playerManager.GetScore() : 0;
-            EndRun(currentScore);
+            EndRun(currentScore, true);
         }
         else
         {
@@ -424,13 +422,13 @@ public class BossRushManager : MonoBehaviour
     void HandleGameOver(int finalScore, int fuerzaCards, int agilidadCards, int destrezaCards, EnemyInstance defeatedBy)
     {
         Debug.Log("BossRushManager: Game Over - Score: " + finalScore);
-        EndRun(finalScore);
+        EndRun(finalScore, false);
         
         // Limpiar guardado
         RunSaveManager.ClearSavedRun();
     }
 
-    public void EndRun(int finalScore)
+    public void EndRun(int finalScore, bool victory)
     {
         if (!runInProgress)
         {
@@ -438,13 +436,13 @@ public class BossRushManager : MonoBehaviour
             return;
         }
 
-        Debug.Log("BossRushManager: Run terminada");
+        Debug.Log($"BossRushManager: Run terminada (Victoria: {victory})");
         Debug.Log("Nodos completados: " + currentNodeIndex);
         Debug.Log("Score final: " + finalScore);
         
         runInProgress = false;
         
-        OnRunEnded?.Invoke(finalScore, currentNodeIndex);
+        OnRunEnded?.Invoke(finalScore, currentNodeIndex, victory);
         
         // Limpiar guardado
         RunSaveManager.ClearSavedRun();
@@ -455,7 +453,7 @@ public class BossRushManager : MonoBehaviour
         if (runInProgress)
         {
             int currentScore = playerManager != null ? playerManager.GetScore() : 0;
-            EndRun(currentScore);
+            EndRun(currentScore, false);
         }
     }
 

@@ -602,7 +602,7 @@ public class CombatManager : MonoBehaviour
                     }
                     else
                     {
-                        playerManager.ModifyHealth(-damage);
+                        playerManager.ModifyHealth(-damage, true);
                         OnHitReceivedEvent?.Invoke(damage);
                         GameOver?.Invoke(
                             finalScore, 
@@ -615,7 +615,7 @@ public class CombatManager : MonoBehaviour
                 }
                 else
                 {
-                    playerManager.ModifyHealth(-damage);
+                    playerManager.ModifyHealth(-damage, true);
                     OnHitReceivedEvent?.Invoke(damage);
                     OnCombatEnd?.Invoke(false, finalScore, default, damage);
                 }
